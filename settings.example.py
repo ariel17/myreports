@@ -1,4 +1,8 @@
 # Django settings for myreports project.
+import os
+from logging.handlers import SysLogHandler
+
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -116,9 +120,12 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    'django.contrib.admindocs',
+    # project apps
+    'server',
+    'report'
 )
 
 # A sample logging configuration. The only tangible logging
@@ -136,6 +143,13 @@ LOGGING = {
         }
     },
     'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+    'server': {
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
