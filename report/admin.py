@@ -9,7 +9,7 @@ class ReportAdmin(admin.ModelAdmin):
     ordering = ("title")
 
 
-class SectionAdmin(admin.ModelAdmin):
+class SectionAdmin(admin.TabularInline):
     list_display = ("report", "title", "variables")
     list_filter = ("report", "title", "variables")
     ordering = ("title")
