@@ -15,8 +15,8 @@ class Report(models.Model):
     """
     """
     server = models.ForeignKey(Server)
-    title = models.CharField(_("Report title"), help_text="Title for this \
-            report.")
+    title = models.CharField(_("Report title"), max_length=200, \
+            help_text="Title for this report.")
 
     def __unicode__(self):
         """
@@ -28,10 +28,10 @@ class Section(models.Model):
     """
     """
     report = models.ForeignKey(Report)
-    title = models.CharField(_("Part title"), help_text="Title for this \
-            section of the report.")
-    variables = models.CharField(_("Variables"), help_text="Variables \
-            involved in this section.")
+    title = models.CharField(_("Part title"), max_length=200, \
+            help_text="Title for this section of the report.")
+    variables = models.CharField(_("Variables"), max_length=255, \
+            help_text="Variables involved in this section.")
 
     def __unicode__(self):
         """
