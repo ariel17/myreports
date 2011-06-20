@@ -13,7 +13,7 @@ import MySQLdb
 logger = logging.getLogger(__name__)
 
 
-class Server(modes.Model):
+class Server(models.Model):
     """
     MySQL Server instance wich will be used to generate reports.
     """
