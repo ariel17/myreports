@@ -1,5 +1,6 @@
 # models
 from django.db import models
+from report.models import Report
 
 # utils
 from django.utils.translation import ugettext as _
@@ -17,6 +18,7 @@ class Server(models.Model):
     """
     MySQL Server instance wich will be used to generate reports.
     """
+    active = models.BooleanField(_("Is active"), default=True)
     name = models.CharField(_("Name"), max_length=100, \
             help_text="Server name or ID.")
     ip = models.IPAddressField(_("IP address"), help_text="IP address where \
@@ -27,7 +29,8 @@ class Server(models.Model):
             help_text="User name to stablish a connection.")
     password = models.CharField(_("Password"), max_length=100, \
             help_text="Password for this connection.")
-    active = models.BooleanField(_("Is active"), default=True)
+    reports = models.ManyToManyField(Report, help_text="Selected reports for \
+            this server")
 
     def __unicode__(self):
         return u"%s [%s:%d]" % (self.name, self.ip, self.port)
