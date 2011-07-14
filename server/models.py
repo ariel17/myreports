@@ -75,10 +75,11 @@ class Server(models.Model):
         """
         return self.doquery("SHOW VARIABLES;", dict)
 
-    def show_status(self):
+    def show_status(self, variable=None):
         """
         """
-        return self.doquery("SHOW STATUS;", dict)
+        sql = "SHOW STATUS %s;" % ("LIKE '%s'" % variable if variable else '')
+        return self.doquery(sql, dict)
 
     def available_reports(self):
         """
