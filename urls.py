@@ -1,5 +1,9 @@
 from django.conf.urls.defaults import patterns, include, url
 
+from server.views import show_all_reports
+from report.views import show_report
+from report.views import show_section
+
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
@@ -13,16 +17,16 @@ urlpatterns = patterns('',
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls),
+    url(r'^admin/', include(admin.site.urls)),
 
-    url(r'^server/(?P<ip>[0-9\.]{7,15})/$', server.views.show_all_reports),        
+    # application patterns
 
-    url(r'^server/(?P<id>\d+)/$', server.views.show_all_reports),        
-                                               
-    url(r'^report/(?P<id>\d+)/$', report.views.show_report),
+    (r'^server/(?P<ip>[0-9\.]{7,15})/$', show_all_reports),
 
-    url(r'^report/section/(?P<id>\d+)/$', report.views.show_section)
-        
-        ),
+    (r'^server/(?P<id>\d+)/$', show_all_reports),
+
+    (r'^report/(?P<id>\d+)/$', show_report),
+
+    (r'^report/section/(?P<id>\d+)/$', show_section),
 
 )
