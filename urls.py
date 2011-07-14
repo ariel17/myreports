@@ -13,5 +13,16 @@ urlpatterns = patterns('',
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls),
+
+    url(r'^server/(?P<ip>[0-9\.]{7,15})/$', server.views.show_all_reports),        
+
+    url(r'^server/(?P<id>\d+)/$', server.views.show_all_reports),        
+                                               
+    url(r'^report/(?P<id>\d+)/$', report.views.show_report),
+
+    url(r'^report/section/(?P<id>\d+)/$', report.views.show_section)
+        
+        ),
+
 )

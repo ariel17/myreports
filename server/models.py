@@ -1,6 +1,6 @@
 # models
 from django.db import models
-from report.models import Report
+from report.models import Report, Section, Variable
 
 # utils
 from django.utils.translation import ugettext as _
@@ -27,7 +27,7 @@ class Server(models.Model):
             help_text="Port where this instance is binded.")
     username = models.CharField(_("User name"), max_length=20, \
             help_text="User name to stablish a connection.")
-    password = models.CharField(_("Password"), max_length=100, \
+    password = models.CharField(_("Password"), max_length=100, blank=True, \
             help_text="Password for this connection.")
     reports = models.ManyToManyField(Report, help_text="Selected reports for \
             this server")
@@ -79,3 +79,20 @@ class Server(models.Model):
         """
         """
         return self.doquery("SHOW STATUS;", dict)
+
+    def available_reports(self):
+        """
+        """
+        return u",".join([r.title for r in self.reports.all()])
+
+
+class History(models.Model):
+    """
+    """
+    server = models.ForeignKey(Server)
+    variable = models.ForeignKey(Variable)
+    time = models.DateTimeField(auto_now=True)
+    value = models.IntegerField()
+
+    def __unicode__(self):
+        return u"%s=%s" % (self.variable.name, self.value)
