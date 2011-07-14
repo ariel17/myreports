@@ -22,7 +22,7 @@ class Variable(models.Model):
     type = models.CharField(_("Data Type"), max_length=1, \
             choices=DTYPE_CHOICES, help_text="Data type of the variable.")
     description = models.CharField(_("Description"), max_length=200, \
-            help_text="What this variable means.")
+            blank=True, help_text="What this variable means.")
 
     def __unicode__(self):
         return u"%s" % self.name
