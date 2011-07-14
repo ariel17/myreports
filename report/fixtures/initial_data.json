@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "report.variable", "fields": {"type": "s", "name": "test_var", "description": "This is a test var."}}, {"pk": 1, "model": "report.section", "fields": {"variables": [1], "title": "test_section_1"}}, {"pk": 1, "model": "report.report", "fields": {"sections": [1], "title": "test_report_1"}}]

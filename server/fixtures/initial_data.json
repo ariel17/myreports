@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "server.server", "fields": {"username": "root", "name": "localhost", "ip": "127.0.0.1", "reports": [1], "active": true, "password": "", "port": 3306}}]
