@@ -157,3 +157,8 @@ LOGGING = {
         },
     }
 }
+
+
+# Application settings
+
+CHECK_STATUS_PERIOD = 10 # in seconds
