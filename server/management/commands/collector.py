@@ -68,10 +68,18 @@ call::
 """
 
 from django.core.management.base import BaseCommand
+from django.conf import settings
+from server.models import Server
+
 from optparse import make_option
 
 import daemon
 from daemon import pidlockfile
+
+import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 class DaemonCommand(BaseCommand):
@@ -186,4 +194,10 @@ class DaemonCommand(BaseCommand):
         """
         Perform the command's actions in the given daemon context
         """
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        
+        # TODO: while True? (condition? signals?)
+        # TODO: split threads for each server
+
+        # TODO: in threads: sleep (settings.CHECK_STATUS_PERIOD)
+        # TODO: in threads: check statistics.
