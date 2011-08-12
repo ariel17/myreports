@@ -74,6 +74,7 @@ from server.models import Server
 from optparse import make_option
 
 import daemon
+
 from lockfile import FileLock
 
 import logging
@@ -81,8 +82,6 @@ import logging
 import threading
 
 from sys import exit
-
-from os import getpid
 
 
 logger = logging.getLogger(__name__)
@@ -185,7 +184,6 @@ class Command(BaseCommand): # DaemonCommand
 
         """
         logger.info(">>> MyReports collector daemon initialized.")
-        logger.info("Process ID #%s" % getpid())
 
         context = daemon.DaemonContext()
         context.chroot_directory = self.get_option_value(options,
