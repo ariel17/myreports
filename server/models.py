@@ -53,7 +53,7 @@ class Server(models.Model):
             self.conn.close()
         except:
             pass
-        logger.debug("Connection closed.")
+        logger.debug("%s Connection closed." % self)
 
     def doquery(self, sql, parsefunc=None):
         """
