@@ -87,7 +87,7 @@ from os import getpid
 
 logger = logging.getLogger(__name__)
 
-SUCCESS, ALREADY_RUNNING, CANT_LOCK_PID = 0, 1, 2
+SUCCESS, ALREADY_RUNNING, NO_PIDFILE, CANT_LOCK_PID = range(4)
 
 
 class Worker(threading.Thread):
@@ -225,6 +225,7 @@ class Command(BaseCommand): # DaemonCommand
 
         #Make pid lock file
         pidfile = self.get_option_value(options, 'pidfile')
+        logger.debug("'pidfile': %s" % pidfile)
         if pidfile:
             logger.debug("Locking PID file %s" % pidfile)
             if context.pidfile.is_locked():
@@ -239,6 +240,10 @@ class Command(BaseCommand): # DaemonCommand
                 logger.info(">>> MyReports collector daemon finished with \
 errors.")
                 exit(CANT_LOCK_PID)
+        else:
+            logger.error("Missing 'pidfile' parameter.")
+            logger.info(">>> MyReports collector daemon finished with errors.")
+            exit(NO_PIDFILE)
 
         uid = self.get_option_value(options, 'uid')
         if uid is not None:
@@ -251,7 +256,6 @@ errors.")
         logger.debug("'gid': %s" % uid)
 
         context.open()
-
         self.handle_daemon(*args, **options)
 
         logger.debug("Unlocking PID file %s" % pidfile)
@@ -260,7 +264,6 @@ errors.")
         except lockfile.NotLocked:
             logger.error("The PID file %s was not locked by this process :S" %
                 pidfile)
-
         logger.info(">>> MyReports collector daemon finished successfully.")
         exit(SUCCESS)
 
