@@ -135,17 +135,49 @@ INSTALLED_APPS = (
 # more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s MyReports %(levelname)s %(module)s %(message)s PID#%(process)d'
+        },
+        'simple': {
+            'format': 'MyReports %(levelname)s %(message)s'
+        },
+        'syslog': {
+            'format': 'MyReports %(levelname)s %(module)s %(message)s PID#%(process)d'
+        },
+    },
     'handlers': {
+        'null': {
+            'level':'DEBUG',
+            'class':'django.utils.log.NullHandler',
+            'formatter': 'verbose',
+        },
+        'console':{
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+        'syslog':{ 
+            'level':'DEBUG', 
+            'class': 'logging.handlers.SysLogHandler', 
+            'formatter': 'syslog', 
+            'facility': SysLogHandler.LOG_LOCAL2, 
+        },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
+            'handlers': ['syslog', 'console', ],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'server': {
+            'handlers': ['mail_admins', 'syslog', 'console', ],
+            'level': 'DEBUG',
             'propagate': True,
         },
     },
@@ -157,7 +189,6 @@ LOGGING = {
         },
     }
 }
-
 
 # Application settings
 
