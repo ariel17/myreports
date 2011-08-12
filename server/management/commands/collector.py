@@ -63,7 +63,7 @@ Simple use of daemon command::
 
 call::
 
-    python python manage.py linkconsumer
+    python manage.py linkconsumer
 
 """
 
@@ -74,15 +74,51 @@ from server.models import Server
 from optparse import make_option
 
 import daemon
-from daemon import pidlockfile
+from lockfile import FileLock
 
-import logger
+import logging
+
+import threading
+
+from sys import exit
+
+from os import getpid
 
 
 logger = logging.getLogger(__name__)
 
+SUCCESS, ALREADY_RUNNING, CANT_LOCK_PID = 0, 1, 2
 
-class DaemonCommand(BaseCommand):
+
+class Worker(threading.Thread):
+    """
+    This class wraps the Server class model with threading functionallity.
+    """
+    id = None
+    server = None
+
+    def __init__(self, id, server):
+        super(Worker, self).__init__()
+        self.id = id
+        self.server = server
+        logger.info("Worker#%d - Initialized thread. Handling server %s" %
+                (i, server))
+
+    def run(self):
+        # TODO: while True? (condition? signals?)
+        # TODO: in threads: sleep (settings.CHECK_STATUS_PERIOD)
+        # TODO: in threads: check statistics.
+        pass
+
+    def __del__(self):
+        super(Worker, self).__del__()
+        if self.server:
+            self.server.close()
+        logger.info(("Worker#%d - " % self.id if self.id else "") +
+                "Thread finished.")
+
+
+class Command(BaseCommand): # DaemonCommand
 
     option_list = BaseCommand.option_list + (
         make_option('--chroot_directory', action='store',
@@ -117,7 +153,8 @@ class DaemonCommand(BaseCommand):
         make_option('--stderr', action='store', dest='stderr',
             help='Standard Error'),
     )
-    help = 'Create a daemon'
+    help = "Starts the collector daemon and fetch status of all MySQL servers \
+            configured."
 
     chroot_directory = None
     working_directory = '/'
@@ -135,7 +172,6 @@ class DaemonCommand(BaseCommand):
         value = options.get(name)
         if value == expected:
             value = getattr(self, name)
-        print name, ' ', value
         return value
 
     def handle(self, *args, **options):
@@ -148,56 +184,101 @@ class DaemonCommand(BaseCommand):
                 --stdout=/var/log/cb/links.out --stderr=/var/log/cb/links.err
 
         """
-        context = daemon.DaemonContext()
+        logger.info(">>> MyReports collector daemon initialized.")
+        logger.info("Process ID #%s" % getpid())
 
+        context = daemon.DaemonContext()
         context.chroot_directory = self.get_option_value(options,
                 'chroot_directory')
+        logger.debug("'chroot_directory': %s" % context.chroot_directory)
+
         context.working_directory = self.get_option_value(options,
                 'working_directory', '/')
+        logger.debug("'working_directory': %s" % context.working_directory)
+
         context.umask = self.get_option_value(options, 'umask', 0)
+        logger.debug("'umask': %s" % context.umask)
+
         context.detach_process = self.get_option_value(options,
                 'detach_process')
+        logger.debug("'detach_process': %s" % context.detach_process)
+
         context.prevent_core = self.get_option_value(options, 'prevent_core',
                 True)
+        logger.debug("'prevent_core': %s" % context.prevent_core)
 
         #Get file objects
         stdin = self.get_option_value(options, 'stdin')
         if stdin is not None:
             context.stdin = open(stdin, "r")
+        logger.debug("'stdin': %s" % stdin)
 
         stdout = self.get_option_value(options, 'stdout')
         if stdout is not None:
             context.stdout = open(stdout, "a+")
+        logger.debug("'stdout': %s" % stdout)
 
         stderr = self.get_option_value(options, 'stderr')
         if stderr is not None:
             context.stderr = open(stderr, "a+")
+        logger.debug("'stderr': %s" % stderr)
 
         #Make pid lock file
         pidfile = self.get_option_value(options, 'pidfile')
-        if pidfile is not None:
-            context.pidfile = pidlockfile.PIDLockFile(pidfile)
+        if pidfile:
+            logger.debug("Locking PID file %s" % pidfile)
+            if context.pidfile.is_locked():
+                logger.error("PID file is already locked.")
+                exit(ALREADY_RUNNING)
+            context.pidfile = FileLock(pidfile)
+            try:
+                context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
+            except lockfile.LockTimeout:
+                context.pidfile.release()
+                logger.exception("Can't lock PID file:")
+                logger.info(">>> MyReports collector daemon finished with \
+errors.")
+                exit(CANT_LOCK_PID)
 
         uid = self.get_option_value(options, 'uid')
         if uid is not None:
             context.uid = uid
+        logger.debug("'uid': %s" % uid)
 
         gid = self.get_option_value(options, 'gid')
         if gid is not None:
             context.gid = uid
+        logger.debug("'gid': %s" % uid)
 
         context.open()
 
         self.handle_daemon(*args, **options)
 
+        logger.debug("Unlocking PID file %s" % pidfile)
+        try:
+            context.pidfile.release()
+        except lockfile.NotLocked:
+            logger.error("The PID file %s was not locked by this process :S" %
+                pidfile)
+
+        logger.info(">>> MyReports collector daemon finished successfully.")
+        exit(SUCCESS)
+
     def handle_daemon(self, *args, **options):
         """
         Perform the command's actions in the given daemon context
         """
-        # raise NotImplementedError()
-        
-        # TODO: while True? (condition? signals?)
-        # TODO: split threads for each server
+        servers = Server.objects.filter(active=True)
+        logger.debug("Servers fetched: %s" % repr(servers))
 
-        # TODO: in threads: sleep (settings.CHECK_STATUS_PERIOD)
-        # TODO: in threads: check statistics.
+        workers = []
+
+        logger.info("Starting threads.")
+        for i in range(len(servers)):
+            w = Worker(i, servers[i])
+            w.start()
+            workers.append(w)
+
+        logger.info("Stopping threads.")
+        for w in workers:
+            w.join()
