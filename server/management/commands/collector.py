@@ -86,7 +86,8 @@ from sys import exit
 
 logger = logging.getLogger(__name__)
 
-SUCCESS, ALREADY_RUNNING, NO_PIDFILE, CANT_LOCK_PID = range(4)
+SUCCESS, ALREADY_RUNNING, NO_PIDFILE, CANT_LOCK_PID, DAEMON_CONTEXT_ERROR = \
+        range(5)
 
 
 class Worker(threading.Thread):
@@ -117,7 +118,7 @@ class Worker(threading.Thread):
                 "Thread finished.")
 
 
-class Command(BaseCommand): # DaemonCommand
+class Command(BaseCommand):  # DaemonCommand
 
     option_list = BaseCommand.option_list + (
         make_option('--chroot_directory', action='store',
@@ -226,10 +227,10 @@ class Command(BaseCommand): # DaemonCommand
         logger.debug("'pidfile': %s" % pidfile)
         if pidfile:
             logger.debug("Locking PID file %s" % pidfile)
+            context.pidfile = FileLock(pidfile)
             if context.pidfile.is_locked():
                 logger.error("PID file is already locked.")
                 exit(ALREADY_RUNNING)
-            context.pidfile = FileLock(pidfile)
             try:
                 context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
             except lockfile.LockTimeout:
@@ -251,9 +252,15 @@ errors.")
         gid = self.get_option_value(options, 'gid')
         if gid is not None:
             context.gid = uid
-        logger.debug("'gid': %s" % uid)
+        logger.debug("'gid': %s" % gid)
 
-        context.open()
+        logger.info("Opening daemon context.")
+        try:
+            context.open()
+        except daemon.daemon.DaemonOSEnvironmentError, e:
+            logger.exception("Error ocurred trying to open daemon context:")
+            exit(DAEMON_CONTEXT_ERROR)
+
         self.handle_daemon(*args, **options)
 
         logger.debug("Unlocking PID file %s" % pidfile)
