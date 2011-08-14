@@ -138,13 +138,13 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s MyReports %(levelname)s %(module)s %(message)s PID#%(process)d'
+            'format': '%(asctime)s MyReports %(levelname)s %(module)s PID#%(process)d %(message)s'
         },
         'simple': {
             'format': 'MyReports %(levelname)s %(message)s'
         },
         'syslog': {
-            'format': 'MyReports %(levelname)s %(module)s %(message)s PID#%(process)d'
+            'format': 'MyReports %(levelname)s %(module)s PID#%(process)d %(message)s'
         },
     },
     'handlers': {
