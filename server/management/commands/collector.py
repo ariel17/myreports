@@ -102,7 +102,7 @@ class Worker(threading.Thread):
         self.id = id
         self.server = server
         logger.info("Worker#%d - Initialized thread. Handling server %s" %
-                (i, server))
+                (id, server))
 
     def run(self):
         # TODO: while True? (condition? signals?)
@@ -111,7 +111,6 @@ class Worker(threading.Thread):
         pass
 
     def __del__(self):
-        super(Worker, self).__del__()
         if self.server:
             self.server.close()
         logger.info(("Worker#%d - " % self.id if self.id else "") +
@@ -167,6 +166,7 @@ class Command(BaseCommand):  # DaemonCommand
     pidfile = None
     uid = None
     gid = None
+    context = daemon.DaemonContext()
 
     def get_option_value(self, options, name, expected=None):
         value = options.get(name)
@@ -186,7 +186,6 @@ class Command(BaseCommand):  # DaemonCommand
         """
         logger.info(">>> MyReports collector daemon initialized.")
 
-        context = daemon.DaemonContext()
         context.chroot_directory = self.get_option_value(options,
                 'chroot_directory')
         logger.debug("'chroot_directory': %s" % context.chroot_directory)
@@ -196,7 +195,7 @@ class Command(BaseCommand):  # DaemonCommand
         logger.debug("'working_directory': %s" % context.working_directory)
 
         context.umask = self.get_option_value(options, 'umask', 0)
-        logger.debug("'umask': %s" % context.umask)
+        logger.debug("'umask': %d" % context.umask)
 
         context.detach_process = self.get_option_value(options,
                 'detach_process')
@@ -263,12 +262,6 @@ errors.")
 
         self.handle_daemon(*args, **options)
 
-        logger.debug("Unlocking PID file %s" % pidfile)
-        try:
-            context.pidfile.release()
-        except lockfile.NotLocked:
-            logger.error("The PID file %s was not locked by this process :S" %
-                pidfile)
         logger.info(">>> MyReports collector daemon finished successfully.")
         exit(SUCCESS)
 
@@ -290,3 +283,12 @@ errors.")
         logger.info("Stopping threads.")
         for w in workers:
             w.join()
+
+    def __del__(self):
+        if self.context.pidfile.is_locked():
+            logger.debug("Unlocking PID file %s" % pidfile)
+            try:
+                context.pidfile.release()
+            except lockfile.NotLocked:
+                logger.error("The PID file %s was not locked by this process :S" %
+                    pidfile)
