@@ -186,54 +186,54 @@ class Command(BaseCommand):  # DaemonCommand
         """
         logger.info(">>> MyReports collector daemon initialized.")
 
-        context.chroot_directory = self.get_option_value(options,
+        self.context.chroot_directory = self.get_option_value(options,
                 'chroot_directory')
-        logger.debug("'chroot_directory': %s" % context.chroot_directory)
+        logger.debug("'chroot_directory': %s" % self.context.chroot_directory)
 
-        context.working_directory = self.get_option_value(options,
+        self.context.working_directory = self.get_option_value(options,
                 'working_directory', '/')
-        logger.debug("'working_directory': %s" % context.working_directory)
+        logger.debug("'working_directory': %s" % self.context.working_directory)
 
-        context.umask = self.get_option_value(options, 'umask', 0)
-        logger.debug("'umask': %d" % context.umask)
+        self.context.umask = self.get_option_value(options, 'umask', 0)
+        logger.debug("'umask': %d" % self.context.umask)
 
-        context.detach_process = self.get_option_value(options,
+        self.context.detach_process = self.get_option_value(options,
                 'detach_process')
-        logger.debug("'detach_process': %s" % context.detach_process)
+        logger.debug("'detach_process': %s" % self.context.detach_process)
 
-        context.prevent_core = self.get_option_value(options, 'prevent_core',
+        self.context.prevent_core = self.get_option_value(options, 'prevent_core',
                 True)
-        logger.debug("'prevent_core': %s" % context.prevent_core)
+        logger.debug("'prevent_core': %s" % self.context.prevent_core)
 
         #Get file objects
-        stdin = self.get_option_value(options, 'stdin')
-        if stdin is not None:
-            context.stdin = open(stdin, "r")
-        logger.debug("'stdin': %s" % stdin)
+        self.stdin = self.get_option_value(options, 'stdin')
+        if self.stdin is not None:
+            self.context.stdin = open(self.stdin, "r")
+        logger.debug("'stdin': %s" % self.stdin)
 
-        stdout = self.get_option_value(options, 'stdout')
-        if stdout is not None:
-            context.stdout = open(stdout, "a+")
-        logger.debug("'stdout': %s" % stdout)
+        self.stdout = self.get_option_value(options, 'stdout')
+        if self.stdout is not None:
+            self.context.stdout = open(self.stdout, "a+")
+        logger.debug("'stdout': %s" % self.stdout)
 
-        stderr = self.get_option_value(options, 'stderr')
-        if stderr is not None:
-            context.stderr = open(stderr, "a+")
-        logger.debug("'stderr': %s" % stderr)
+        self.stderr = self.get_option_value(options, 'stderr')
+        if self.stderr is not None:
+            self.context.stderr = open(self.stderr, "a+")
+        logger.debug("'stderr': %s" % self.stderr)
 
         #Make pid lock file
-        pidfile = self.get_option_value(options, 'pidfile')
-        logger.debug("'pidfile': %s" % pidfile)
-        if pidfile:
-            logger.debug("Locking PID file %s" % pidfile)
-            context.pidfile = FileLock(pidfile)
-            if context.pidfile.is_locked():
+        self.pidfile = self.get_option_value(options, 'pidfile')
+        logger.debug("'pidfile': %s" % self.pidfile)
+        if self.pidfile:
+            logger.debug("Locking PID file %s" % self.pidfile)
+            self.context.pidfile = FileLock(self.pidfile)
+            if self.context.pidfile.is_locked():
                 logger.error("PID file is already locked.")
                 exit(ALREADY_RUNNING)
             try:
-                context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
+                self.context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
             except lockfile.LockTimeout:
-                context.pidfile.release()
+                self.context.pidfile.release()
                 logger.exception("Can't lock PID file:")
                 logger.info(">>> MyReports collector daemon finished with \
 errors.")
@@ -243,19 +243,19 @@ errors.")
             logger.info(">>> MyReports collector daemon finished with errors.")
             exit(NO_PIDFILE)
 
-        uid = self.get_option_value(options, 'uid')
-        if uid is not None:
-            context.uid = uid
-        logger.debug("'uid': %s" % uid)
+        self.uid = self.get_option_value(options, 'uid')
+        if self.uid is not None:
+            self.context.uid = self.uid
+        logger.debug("'uid': %s" % self.uid)
 
-        gid = self.get_option_value(options, 'gid')
-        if gid is not None:
-            context.gid = uid
-        logger.debug("'gid': %s" % gid)
+        self.gid = self.get_option_value(options, 'gid')
+        if self.gid is not None:
+            self.context.gid = self.gid
+        logger.debug("'gid': %s" % self.gid)
 
-        logger.info("Opening daemon context.")
+        logger.info("Opening daemon self.context.")
         try:
-            context.open()
+            self.context.open()
         except daemon.daemon.DaemonOSEnvironmentError, e:
             logger.exception("Error ocurred trying to open daemon context:")
             exit(DAEMON_CONTEXT_ERROR)
@@ -284,11 +284,11 @@ errors.")
         for w in workers:
             w.join()
 
-    def __del__(self):
-        if self.context.pidfile.is_locked():
-            logger.debug("Unlocking PID file %s" % pidfile)
-            try:
-                context.pidfile.release()
-            except lockfile.NotLocked:
-                logger.error("The PID file %s was not locked by this process :S" %
-                    pidfile)
+    # def __del__(self):
+    #     if self.context.pidfile.is_locked():
+    #         logger.debug("Unlocking PID file %s" % self.pidfile)
+    #         try:
+    #             self.context.pidfile.release()
+    #         except lockfile.NotLocked:
+    #             logger.error("The PID file %s was not locked by this process :S" %
+    #                 self.pidfile)
