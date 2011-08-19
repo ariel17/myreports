@@ -83,11 +83,14 @@ import threading
 
 from sys import exit
 
+import signal
+
+from time import sleep
+
 
 logger = logging.getLogger(__name__)
 
-SUCCESS, ALREADY_RUNNING, NO_PIDFILE, CANT_LOCK_PID, CONTEXT_ERROR = \
-        range(5)
+SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_ERROR = range(3)
 
 
 class Worker(threading.Thread):
@@ -96,6 +99,7 @@ class Worker(threading.Thread):
     """
     id = None
     server = None
+    running = True
 
     def __init__(self, id, server):
         super(Worker, self).__init__()
@@ -104,17 +108,34 @@ class Worker(threading.Thread):
         logger.info("Worker#%d - Initialized thread. Handling server %s" %
                 (id, server))
 
+    def stop(self):
+        """
+        Sets the flag 'running' to False. This breaks the thread loop.
+        """
+        self.running = False
+
+    def reload(self):
+        """
+        Restablish the connection with MySQL server.
+        """
+        self.server.close()
+        self.server.connect()
+
     def run(self):
-        # TODO: while True? (condition? signals?)
-        # TODO: in threads: sleep (settings.CHECK_STATUS_PERIOD)
-        # TODO: in threads: check statistics.
-        pass
+        try:
+            self.server.connect()
+            while self.running:
+                sleep(settings.CHECK_STATUS_PERIOD)
+                logger.info("Worker#%d - I'm running :)" % self.id)
+                # TODO: check statistics.
+        except Exception:
+            logger.exception("Error occoured when contacting server:")
+        finally:
+            logger.info("Worker#%d - Finishing thread." % self.id)
 
     def __del__(self):
         if self.server:
             self.server.close()
-        logger.info(("Worker#%d - " % self.id if self.id else "") +
-                "Thread finished.")
 
 
 class Command(BaseCommand):  # DaemonCommand
@@ -158,7 +179,33 @@ class Command(BaseCommand):  # DaemonCommand
     help = "Starts the collector daemon and fetch status of all MySQL servers \
             configured."
 
+    workers = []
     context = daemon.DaemonContext()
+
+    def tear_down(self):
+        """
+        Handle to all task that must be made to close clean and fast.
+        """
+        # for handler in [self.context.stdin, self.context.stdout,
+        #         self.context.stderr]:
+        #     if handler:
+        #         try:
+        #             handler.close()
+        #         except:
+        #             pass
+        logger.info("Tearing down.")
+        logger.debug("Stopping all threads.")
+        for w in self.workers:
+            w.stop()
+
+    def reload(self):
+        """
+        Reloads configuration and reconnects for all servers.
+        """
+        logger.info("Reloading configuration.")
+        logger.debug("Reconnecting all servers.")
+        for w in self.workers:
+            w.reload()
 
     def handle(self, *args, **options):
         """
@@ -189,15 +236,36 @@ class Command(BaseCommand):  # DaemonCommand
         try:
             if self.stdin is not None:
                 self.context.stdin = open(self.stdin, "r")
-                                                                               
+        except Exception:
+            logger.exception("Error occurred while trying to open stdin \
+handler:")
+            self.context.stdin.close()
+            sys.exit(CONTEXT_ERROR)
+
+        try:
             if self.stdout is not None:
                 self.context.stdout = open(self.stdout, "a+")
-                                                                               
+        except Exception:
+            logger.exception("Error occurred while trying to open stdout \
+handler:")
+            self.context.stdout.close()
+            sys.exit(CONTEXT_ERROR)
+
+        try:
             if self.stderr is not None:
                 self.context.stderr = open(self.stderr, "a+")
         except Exception:
-            logger.exception("Error occurred while trying to open an output:")
+            logger.exception("Error occurred while trying to open stderr \
+handler:")
+            self.context.stderr.close()
             sys.exit(CONTEXT_ERROR)
+
+        # Adding signals handling
+        self.context.signal_map = {
+                signal.SIGTERM: self.tear_down,
+                # signal.SIGHUP: 'terminate',
+                signal.SIGUSR1: self.reload,
+        }
 
         try:
             self.context.open()
@@ -234,33 +302,31 @@ class Command(BaseCommand):  # DaemonCommand
             self.context.pidfile = FileLock(self.pidfile)
             if self.context.pidfile.is_locked():
                 logger.error("PID file is already locked (other process \
-                        running?).")
-                exit(ALREADY_RUNNING)
+running?).")
+                exit(ALREADY_RUNNING_ERROR)
             try:
                 self.context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
             except lockfile.LockTimeout:
                 self.context.pidfile.release()
                 logger.exception("Can't lock PID file:")
                 logger.info(">>> Daemon finished with errors.")
-                exit(CANT_LOCK_PID)
+                exit(CONTEXT_ERROR)
         else:
             logger.error("Invalid value for 'pidfile' parameter.")
             logger.info(">>> Daemon finished with errors.")
-            exit(NO_PIDFILE)
+            exit(CONTEXT_ERROR)
 
         servers = Server.objects.filter(active=True)
         logger.debug("Servers fetched: %s" % repr(servers))
-
-        workers = []
 
         logger.info("Starting threads.")
         for i in range(len(servers)):
             w = Worker(i, servers[i])
             w.start()
-            workers.append(w)
+            self.workers.append(w)
 
-        logger.info("Stopping threads.")
-        for w in workers:
+        logger.debug("Waiting for threads to terminate.")
+        for w in self.workers:
             w.join()
 
         logger.info(">>> Core daemon finished.")
