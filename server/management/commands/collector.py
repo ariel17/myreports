@@ -186,13 +186,6 @@ class Command(BaseCommand):  # DaemonCommand
         """
         Handle to all task that must be made to close clean and fast.
         """
-        # for handler in [self.context.stdin, self.context.stdout,
-        #         self.context.stderr]:
-        #     if handler:
-        #         try:
-        #             handler.close()
-        #         except:
-        #             pass
         logger.info("Tearing down.")
         logger.debug("Stopping all threads.")
         for w in self.workers:
@@ -263,7 +256,7 @@ handler:")
         # Adding signals handling
         self.context.signal_map = {
                 signal.SIGTERM: self.tear_down,
-                # signal.SIGHUP: 'terminate',
+                signal.SIGHUP: 'terminate',
                 signal.SIGUSR1: self.reload,
         }
 
