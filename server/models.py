@@ -1,6 +1,5 @@
 # models
 from django.db import models
-from report.models import Report, Section, Variable
 
 # utils
 from django.utils.translation import ugettext as _
@@ -85,15 +84,3 @@ class Server(models.Model):
         """
         """
         return u",".join([r.title for r in self.reports.all()])
-
-
-class History(models.Model):
-    """
-    """
-    server = models.ForeignKey(Server)
-    variable = models.ForeignKey(Variable)
-    time = models.DateTimeField(auto_now=True)
-    value = models.IntegerField()
-
-    def __unicode__(self):
-        return u"%s=%s" % (self.variable.name, self.value)
