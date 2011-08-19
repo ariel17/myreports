@@ -1,5 +1,6 @@
 # models
 from django.db import models
+from report.models import Report
 
 # utils
 from django.utils.translation import ugettext as _
