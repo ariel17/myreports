@@ -138,35 +138,42 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s MyReports %(levelname)s %(module)s PID#%(process)d %(message)s'
+            'format': '%(asctime)s MyReports %(levelname)s %(module)s \
+PID#%(process)d %(message)s'
         },
         'simple': {
             'format': 'MyReports %(levelname)s %(message)s'
         },
-        'syslog': {
-            'format': 'MyReports %(levelname)s %(module)s PID#%(process)d %(message)s'
+        'full': {
+            'format': 'MyReports %(levelname)s %(module)s PID#%(process)d \
+%(message)s'
         },
     },
     'handlers': {
         'null': {
-            'level':'DEBUG',
-            'class':'django.utils.log.NullHandler',
+            'level': 'DEBUG',
+            'class': 'django.utils.log.NullHandler',
             'formatter': 'verbose',
         },
-        'console':{
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
         },
-        'syslog':{ 
-            'level':'DEBUG', 
-            'class': 'logging.handlers.SysLogHandler', 
-            'formatter': 'syslog', 
-            'facility': SysLogHandler.LOG_LOCAL2, 
+        'syslog': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.SysLogHandler',
+            'formatter': 'full',
+            'facility': SysLogHandler.LOG_LOCAL2,
+        },
+        'daemon': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
@@ -175,19 +182,16 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'server': {
-            'handlers': ['mail_admins', 'syslog', 'console', ],
+        'server.management.commands.collector': {
+            'handlers': ['daemon', 'mail_admins', ],
             'level': 'DEBUG',
             'propagate': True,
         },
-    },
-    'server': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'server': {
+            'handlers': ['mail_admins', ],
+            'level': 'DEBUG',
         },
-    }
+    },
 }
 
 # Application settings
