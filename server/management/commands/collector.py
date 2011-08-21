@@ -70,6 +70,7 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
+from history.models import Snapshot
 
 from optparse import make_option
 
@@ -126,8 +127,11 @@ class Worker(threading.Thread):
             self.server.connect()
             while self.running:
                 sleep(settings.CHECK_STATUS_PERIOD)
-                logger.info("Worker#%d - I'm running :)" % self.id)
-                # TODO: check statistics.
+                # check values for all variables of all reports assigned.
+                # for v in self.server.get_variables():
+                #     if v.type == 'n':  # only numeric status variables
+                #         Snapshot.take_snapshot(self.server, v)
+                logger.info("running")
         except Exception:
             logger.exception("Error occoured when contacting server:")
         finally:
@@ -211,8 +215,17 @@ class Command(BaseCommand):  # DaemonCommand
 
         """
 
-        # collecting parameters
+        # Making basic checks for some parameters 
 
+        logger.debug("Checking required parameters.")
+        for param in ['stdout', 'stderr', 'pidfile']:
+            if not options.get(param, None):
+                logger.error("Invalid value for parameter '%s'. Use -h to "\
+                        "read help." % param)
+                exit(CONTEXT_ERROR)
+
+        # collecting parameters
+                                                                      
         self.context.chroot_directory = options['chroot_directory']
         self.context.working_directory = options['working_directory']
         self.context.umask = options['umask']
@@ -225,41 +238,35 @@ class Command(BaseCommand):  # DaemonCommand
         self.uid = options['uid']
         self.gid = options['gid']
 
-        #Get file objects
-        try:
-            if self.stdin is not None:
-                self.context.stdin = open(self.stdin, "r")
-        except Exception:
-            logger.exception("Error occurred while trying to open stdin \
-handler:")
-            self.context.stdin.close()
-            sys.exit(CONTEXT_ERROR)
-
-        try:
-            if self.stdout is not None:
-                self.context.stdout = open(self.stdout, "a+")
-        except Exception:
-            logger.exception("Error occurred while trying to open stdout \
-handler:")
-            self.context.stdout.close()
-            sys.exit(CONTEXT_ERROR)
-
-        try:
-            if self.stderr is not None:
-                self.context.stderr = open(self.stderr, "a+")
-        except Exception:
-            logger.exception("Error occurred while trying to open stderr \
-handler:")
-            self.context.stderr.close()
-            sys.exit(CONTEXT_ERROR)
-
+        streams = (
+                (self.context.stdin, self.stdin, "r"),
+                (self.context.stdout, self.stdout, "a+"),
+                (self.context.stderr, self.stderr, "a+"),
+        )
+        
+        logger.debug("Openning streams.")
+        for (handler, stream, mode) in streams:
+            try:
+                if stream:
+                    handler = open(stream, mode)
+                else:
+                    stream = None
+            except Exception:
+                logger.exception("Error occurred while trying to open stream "\
+                    "'%s':" % stream)
+                handler.close()
+                exit(CONTEXT_ERROR)
+                                                                            
         # Adding signals handling
+
+        logger.debug("Assingning signal handlers.")
         self.context.signal_map = {
                 signal.SIGTERM: self.tear_down,
                 signal.SIGHUP: 'terminate',
                 signal.SIGUSR1: self.reload,
         }
 
+        logger.debug("Trying to open daemon context.")
         try:
             self.context.open()
         except daemon.daemon.DaemonOSEnvironmentError, e:
@@ -268,6 +275,7 @@ handler:")
 
         self.handle_daemon(*args, **options)
 
+        logger.debug("Finishing loader process.")
         exit(SUCCESS)
 
     def handle_daemon(self, *args, **options):
@@ -290,22 +298,17 @@ handler:")
         logger.debug("'gid': %s" % self.gid)
 
         #Make pid lock file
-        if self.pidfile:
-            logger.debug("Locking PID file %s" % self.pidfile)
-            self.context.pidfile = FileLock(self.pidfile)
-            if self.context.pidfile.is_locked():
-                logger.error("PID file is already locked (other process \
-running?).")
-                exit(ALREADY_RUNNING_ERROR)
-            try:
-                self.context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
-            except lockfile.LockTimeout:
-                self.context.pidfile.release()
-                logger.exception("Can't lock PID file:")
-                logger.info(">>> Daemon finished with errors.")
-                exit(CONTEXT_ERROR)
-        else:
-            logger.error("Invalid value for 'pidfile' parameter.")
+        logger.debug("Locking PID file %s" % self.pidfile)
+        self.context.pidfile = FileLock(self.pidfile)
+        if self.context.pidfile.is_locked():
+            logger.error("PID file is already locked (other process "\
+                "running?).")
+            exit(ALREADY_RUNNING_ERROR)
+        try:
+            self.context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
+        except lockfile.LockTimeout:
+            self.context.pidfile.release()
+            logger.exception("Can't lock PID file:")
             logger.info(">>> Daemon finished with errors.")
             exit(CONTEXT_ERROR)
 

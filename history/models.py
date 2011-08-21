@@ -1,9 +1,13 @@
+import datetime
+
 from django.db import models
 from server.models import Server
 from report.models import Variable
 
-class History(models.Model):
+
+class Snapshot(models.Model):
     """
+    Stores the variable value of some server in given time.
     """
     server = models.ForeignKey(Server)
     variable = models.ForeignKey(Variable)
@@ -12,3 +16,23 @@ class History(models.Model):
 
     def __unicode__(self):
         return u"%s=%s" % (self.variable.name, self.value)
+
+    @classmethod
+    def take_snapshot(server, variable):
+        """
+        Takes an snapshot for the value of the given variable on this server at
+        this moment.
+        """
+        value = server.show_status(pattern=variable.name)
+        s = Snapshot(server=server, variable=variable, value=value)
+        s.save()
+        return s
+
+    def update(self):
+        """
+        Updates the value of the variable on the given server to the actual
+        value.
+        """
+        self.value = self.server.show_status(pattern=self.variable.name)
+        self.time = datetime.now()
+        self.save()

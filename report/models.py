@@ -46,11 +46,13 @@ class Section(models.Model):
 
 class Report(models.Model):
     """
+    This is a full-report model. Contains a Title and all sections conforming a
+    general panorama.
     """
     title = models.CharField(_("Report title"), max_length=200, \
             help_text="Title for this report.")
     sections = models.ManyToManyField(Section, help_text="Sections conforming \
-            this report.")
+            this report (also body).")
 
     def sections_involved(self):
         return u",".join([s.title for s in self.sections.all()])
