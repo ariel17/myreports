@@ -76,7 +76,7 @@ from optparse import make_option
 
 import daemon
 
-from lockfile import FileLock
+from lockfile import FileLock, LockTimeout
 
 import logging
 
@@ -238,25 +238,32 @@ class Command(BaseCommand):  # DaemonCommand
         self.uid = options['uid']
         self.gid = options['gid']
 
-        streams = (
-                (self.context.stdin, self.stdin, "r"),
-                (self.context.stdout, self.stdout, "a+"),
-                (self.context.stderr, self.stderr, "a+"),
-        )
-        
         logger.debug("Openning streams.")
-        for (handler, stream, mode) in streams:
+        if self.stdin:
             try:
-                if stream:
-                    handler = open(stream, mode)
-                else:
-                    stream = None
+                self.context.stdin = open(self.stdin, "r")
             except Exception:
                 logger.exception("Error occurred while trying to open stream "\
-                    "'%s':" % stream)
-                handler.close()
+                    "'stdin':")
+                self.context.stdin.close()
                 exit(CONTEXT_ERROR)
-                                                                            
+
+        try:
+            self.context.stdout = open(self.stdout, "a+")
+        except Exception:
+            logger.exception("Error occurred while trying to open stream "\
+                "'stdout':")
+            self.context.stdout.close()
+            exit(CONTEXT_ERROR)
+
+        try:
+            self.context.stderr = open(self.stderr, "a+")
+        except Exception:
+            logger.exception("Error occurred while trying to open stream "\
+                "'stderr':")
+            self.context.stderr.close()
+            exit(CONTEXT_ERROR)
+
         # Adding signals handling
 
         logger.debug("Assingning signal handlers.")
@@ -306,7 +313,7 @@ class Command(BaseCommand):  # DaemonCommand
             exit(ALREADY_RUNNING_ERROR)
         try:
             self.context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
-        except lockfile.LockTimeout:
+        except LockTimeout:
             self.context.pidfile.release()
             logger.exception("Can't lock PID file:")
             logger.info(">>> Daemon finished with errors.")
