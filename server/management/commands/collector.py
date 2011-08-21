@@ -127,11 +127,10 @@ class Worker(threading.Thread):
             self.server.connect()
             while self.running:
                 sleep(settings.CHECK_STATUS_PERIOD)
-                # check values for all variables of all reports assigned.
-                # for v in self.server.get_variables():
-                #     if v.type == 'n':  # only numeric status variables
-                #         Snapshot.take_snapshot(self.server, v)
-                logger.info("running")
+                check values for all variables of all reports assigned.
+                for v in self.server.get_variables():
+                    if v.type == 'n':  # only numeric status variables
+                        Snapshot.take_snapshot(self.server, v)
         except Exception:
             logger.exception("Error occoured when contacting server:")
         finally:
