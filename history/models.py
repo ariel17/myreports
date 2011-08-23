@@ -4,6 +4,20 @@ from django.db import models
 from server.models import Server
 from report.models import Variable
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+# TODO ADD a cache table:
+
+# hash (server id + variable id) variable-value
+# stores lasts checked values for all variables.
+# also add to history (or snapshot, whatever) those checks.
+
+# for last status, check cache table.
+
 
 class Snapshot(models.Model):
     """

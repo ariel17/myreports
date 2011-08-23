@@ -4,6 +4,7 @@ from django.db import models
 # utils
 from django.utils.translation import ugettext as _
 import settings
+
 import logging
 
 
