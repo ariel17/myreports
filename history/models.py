@@ -17,14 +17,15 @@ class Snapshot(models.Model):
     def __unicode__(self):
         return u"%s=%s" % (self.variable.name, self.value)
 
-    @classmethod
+    @staticmethod
     def take_snapshot(server, variable):
         """
         Takes an snapshot for the value of the given variable on this server at
         this moment.
         """
         value = server.show_status(pattern=variable.name)
-        s = Snapshot(server=server, variable=variable, value=value)
+        s = Snapshot(server=server, variable=variable, 
+                value=value[variable.name])
         s.save()
         return s
 

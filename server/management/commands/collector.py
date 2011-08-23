@@ -123,16 +123,23 @@ class Worker(threading.Thread):
         self.server.connect()
 
     def run(self):
+        logger.debug("Worker#%d - Core initialized." % self.id)
         try:
+            logger.debug("Worker#%d - Connecting to server." % self.id)
             self.server.connect()
             while self.running:
+                logger.debug("Worker#%d - Sleeping %d seconds." % 
+                        (self.id, settings.CHECK_STATUS_PERIOD))
                 sleep(settings.CHECK_STATUS_PERIOD)
-                check values for all variables of all reports assigned.
+                # check values for all variables of all reports assigned.
                 for v in self.server.get_variables():
                     if v.type == 'n':  # only numeric status variables
-                        Snapshot.take_snapshot(self.server, v)
+                        s = Snapshot.take_snapshot(self.server, v)
+                        logger.debug("Worker#%d - Taked snapshot: %s." % 
+                                (self.id, s))
         except Exception:
-            logger.exception("Error occoured when contacting server:")
+            logger.exception("Worker#%d - Error occoured when contacting "\
+                    "server:" % self.id)
         finally:
             logger.info("Worker#%d - Finishing thread." % self.id)
 
@@ -179,8 +186,14 @@ class Command(BaseCommand):  # DaemonCommand
         make_option('--stderr', action='store', dest='stderr', default=None,
             help='Standard Error'),
     )
-    help = "Starts the collector daemon and fetch status of all MySQL servers \
-            configured."
+    help = "Starts the collector daemon and fetch status of all MySQL servers"\
+            "configured.\n\nExample:\n\n"\
+            "$ python manage.py --stdout=/var/log/collector.log "\
+            "--stderr=/var/log/collector-error.log "\
+            "--pidfile=/var/run/collector.pid"
+
+
+
 
     workers = []
     context = daemon.DaemonContext()
