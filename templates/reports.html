@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Reports for {{ server.name }}{% endblock %}
+
+{% block body %}
+
+<table border="0">
+    {% for r in server.reports.all %}
+    <tr><td><h1>{{ r.title }}</h1></td></tr>
+    {% for s in r.sections.all %}
+        <tr><td colspan="6"><h2>{{ s.title }}</h2></td></tr>
+        <tr>
+            <td>Name</td>
+            <td></td>
+            <td>Type</td>
+            <td></td>
+            <td>Description</td>
+            <td></td>
+        </tr>
+        {% for v in s.variables.all %}
+            <tr>
+                <td>{{ v.name }}</td>
+                <td></td>
+                <td>{{ v.type }}</td>
+                <td></td>
+                <td>{{ v.description }}</td>
+                <td></td>
+            </tr>
+        {% endfor %}
+    {% endfor %}
+    {% endfor %}
+</table>
+
+{% endblock %}
