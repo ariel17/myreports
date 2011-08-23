@@ -128,14 +128,14 @@ class Worker(threading.Thread):
             logger.debug("Worker#%d - Connecting to server." % self.id)
             self.server.connect()
             while self.running:
-                logger.debug("Worker#%d - Sleeping %d seconds." % 
+                logger.debug("Worker#%d - Sleeping %d seconds." %
                         (self.id, settings.CHECK_STATUS_PERIOD))
                 sleep(settings.CHECK_STATUS_PERIOD)
                 # check values for all variables of all reports assigned.
                 for v in self.server.get_variables():
                     if v.type == 'n':  # only numeric status variables
                         s = Snapshot.take_snapshot(self.server, v)
-                        logger.debug("Worker#%d - Taked snapshot: %s." % 
+                        logger.debug("Worker#%d - Taked snapshot: %s." %
                                 (self.id, s))
         except Exception:
             logger.exception("Worker#%d - Error occoured when contacting "\
@@ -192,9 +192,6 @@ class Command(BaseCommand):  # DaemonCommand
             "--stderr=/var/log/collector-error.log "\
             "--pidfile=/var/run/collector.pid"
 
-
-
-
     workers = []
     context = daemon.DaemonContext()
 
@@ -227,7 +224,7 @@ class Command(BaseCommand):  # DaemonCommand
 
         """
 
-        # Making basic checks for some parameters 
+        # Making basic checks for some parameters
 
         logger.debug("Checking required parameters.")
         for param in ['stdout', 'stderr', 'pidfile']:
@@ -237,7 +234,7 @@ class Command(BaseCommand):  # DaemonCommand
                 exit(CONTEXT_ERROR)
 
         # collecting parameters
-                                                                      
+
         self.context.chroot_directory = options['chroot_directory']
         self.context.working_directory = options['working_directory']
         self.context.umask = options['umask']
