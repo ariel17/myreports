@@ -140,15 +140,19 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s MyReports %(levelname)s %(module)s \
-PID#%(process)d %(message)s'
+            'format': '%(asctime)s MyReports %(levelname)s %(module)s '\
+                'PID#%(process)d %(message)s'
+        },
+        'daemon': {
+            'format': '%(asctime)s MyReports %(levelname)s %(module)s '\
+                'PID#%(process)d %(threadName)s %(message)s'
         },
         'simple': {
             'format': 'MyReports %(levelname)s %(message)s'
         },
         'full': {
-            'format': 'MyReports %(levelname)s %(module)s PID#%(process)d \
-%(message)s'
+            'format': 'MyReports %(levelname)s %(module)s PID#%(process)d '\
+                '%(message)s'
         },
     },
     'handlers': {
@@ -175,7 +179,7 @@ PID#%(process)d %(message)s'
         'daemon': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'daemon',
         },
     },
     'loggers': {
