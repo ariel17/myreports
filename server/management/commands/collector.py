@@ -71,23 +71,16 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
 from history.models import Snapshot
-
 from optparse import make_option
 
 import daemon
-
 from lockfile import FileLock, LockTimeout
-
-import logging
-
 import threading
-
 from sys import exit
-
 import signal
-
-from time import sleep
-
+from time import sleep, time
+import logging
+from math import floor
 
 logger = logging.getLogger(__name__)
 
@@ -121,13 +114,24 @@ class Worker(threading.Thread):
         try:
             logger.debug("Connecting to server.")
             self.server.connect()
+            # this is the minimal time period between checks (heartbeat)
+            period = self.server.get_max_period()
+            logger.debug("Heartbeat period: %d seconds." % period)
+            variables = self.server.get_variables()
+            logger.debug("Variables to check: %s" % variables)
+            base_time = time()
             while self.running:
-                logger.debug("Sleeping %d seconds." %
-                        settings.DEFAULT_CHECK_PERIOD)
-                sleep(settings.DEFAULT_CHECK_PERIOD)
+                logger.debug("Sleeping %d seconds." % period)
+                sleep(period)
+                # getting actual seconds passed since thread start as int
+                t = int(floor(time() - base_time))
                 # check values for all variables of all reports assigned.
-                for (s, v) in self.server.get_variables():
-                    if v.type == 'n':  # only numeric status variables
+                for (s, v) in variables:
+                    if v.type <> 'n':  # only numeric status variables
+                        continue
+                    # if t matchs a time check period of this variable, then
+                    # do a snapshot.
+                    if t % s == 0:
                         s = Snapshot.take_snapshot(self.server, v)
                         logger.debug("Taked snapshot: %s." % s)
         except Exception:

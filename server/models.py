@@ -122,3 +122,20 @@ class Server(MySQLHandler):
                 for v in s.variables.all():
                     variables.add((s.period, v))
         return variables
+
+    def get_max_period(self):
+        """
+        """
+        def gcd(a, b):
+            """
+            """
+            if b == 0: 
+                return 0
+            if a % b == 0:
+                return b
+            return gcd(a, a % b)
+        periods = [v[0] for v in self.get_variables()]
+        # based on http://code.activestate.com/recipes/577282-finding-the-gcd-of-a-list-of-numbers-aka-reducing-/
+        return reduce(gcd, periods)
+
+        
