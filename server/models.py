@@ -53,6 +53,10 @@ class MySQLHandler(models.Model):
             pass
         logger.debug("%s Connection closed." % self)
 
+    def restart(self):
+        self.close()
+        self.connect()
+
     def doquery(self, sql, parsefunc=None):
         """
         Execute a query with the statement given in 'sql' parameter. Also

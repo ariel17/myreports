@@ -200,6 +200,6 @@ LOGGING = {
     },
 }
 
-CHECK_STATUS_PERIOD = 10 # in seconds
+DEFAULT_CHECK_PERIOD = 10  # in seconds
 
 PID_LOCK_TIMEOUT = 3 # seconds

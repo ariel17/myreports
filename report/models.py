@@ -37,8 +37,9 @@ class Section(models.Model):
             help_text="Title for this section of a report.")
     variables = models.ManyToManyField(Variable, help_text="Wich variables \
             are included to generate this report section.")
-    period = models.PositiveIntegerField(help_text="How many seconds will \
-            perform an active check.")
+    period = models.PositiveIntegerField(\
+            default=settings.DEFAULT_CHECK_PERIOD, 
+            help_text="How many seconds will perform an active check.")
 
     def variables_involved(self):
         return u",".join([v.name for v in self.variables.all()])

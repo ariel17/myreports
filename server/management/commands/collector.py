@@ -113,12 +113,8 @@ class Worker(threading.Thread):
         """
         self.running = False
 
-    def reload_config(self):
-        """
-        Restablish the connection with MySQL server.
-        """
-        self.server.close()
-        self.server.connect()
+    def restart(self):
+        self.server.restart()
 
     def run(self):
         logger.debug("Core initialized.")
@@ -127,8 +123,8 @@ class Worker(threading.Thread):
             self.server.connect()
             while self.running:
                 logger.debug("Sleeping %d seconds." %
-                        settings.CHECK_STATUS_PERIOD)
-                sleep(settings.CHECK_STATUS_PERIOD)
+                        settings.DEFAULT_CHECK_PERIOD)
+                sleep(settings.DEFAULT_CHECK_PERIOD)
                 # check values for all variables of all reports assigned.
                 for (s, v) in self.server.get_variables():
                     if v.type == 'n':  # only numeric status variables
@@ -200,14 +196,14 @@ class Command(BaseCommand):
         for w in self.workers:
             w.stop()
 
-    def reload(self):
+    def reload_config(self):
         """
         Reloads configuration and reconnects for all servers.
         """
         logger.info("Reloading configuration.")
-        logger.debug("Reconnecting all servers.")
+        logger.debug("Restarting all connections.")
         for w in self.workers:
-            w.reload()
+            w.restart()
 
     def handle(self, *args, **options):
         """
