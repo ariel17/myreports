@@ -98,16 +98,14 @@ class Worker(threading.Thread):
     """
     This class wraps the Server class model with threading functionallity.
     """
-    id = None
+
     server = None
     running = True
 
     def __init__(self, id, server):
-        super(Worker, self).__init__()
-        self.id = id
+        super(Worker, self).__init__(name="Worker#%d" % id)
         self.server = server
-        logger.info("Worker#%d - Initialized thread. Handling server %s" %
-                (id, server))
+        logger.info("Initialized thread. Handling server %s" % server)
 
     def stop(self):
         """
@@ -115,7 +113,7 @@ class Worker(threading.Thread):
         """
         self.running = False
 
-    def reload(self):
+    def reload_config(self):
         """
         Restablish the connection with MySQL server.
         """
@@ -123,62 +121,60 @@ class Worker(threading.Thread):
         self.server.connect()
 
     def run(self):
-        logger.debug("Worker#%d - Core initialized." % self.id)
+        logger.debug("Core initialized.")
         try:
-            logger.debug("Worker#%d - Connecting to server." % self.id)
+            logger.debug("Connecting to server.")
             self.server.connect()
             while self.running:
-                logger.debug("Worker#%d - Sleeping %d seconds." %
-                        (self.id, settings.CHECK_STATUS_PERIOD))
+                logger.debug("Sleeping %d seconds." %
+                        settings.CHECK_STATUS_PERIOD)
                 sleep(settings.CHECK_STATUS_PERIOD)
                 # check values for all variables of all reports assigned.
-                for v in self.server.get_variables():
+                for (s, v) in self.server.get_variables():
                     if v.type == 'n':  # only numeric status variables
                         s = Snapshot.take_snapshot(self.server, v)
-                        logger.debug("Worker#%d - Taked snapshot: %s." %
-                                (self.id, s))
+                        logger.debug("Taked snapshot: %s." % s)
         except Exception:
-            logger.exception("Worker#%d - Error occoured when contacting "\
-                    "server:" % self.id)
+            logger.exception("Error occoured when contacting server:")
         finally:
-            logger.info("Worker#%d - Finishing thread." % self.id)
+            logger.info("Finishing thread.")
 
     def __del__(self):
         if self.server:
             self.server.close()
 
 
-class Command(BaseCommand):  # DaemonCommand
+class Command(BaseCommand):
 
     option_list = BaseCommand.option_list + (
         make_option('--chroot_directory', action='store', default=None,
-            dest='chroot_directory', help='Full path to a directory to set as \
-                    the effective root directory of the process.'),
+            dest='chroot_directory', help='Full path to a directory to set '\
+                    'as the effective root directory of the process.'),
         make_option('--working_directory', action='store',
-            dest='working_directory', default="/", help='Full path of the \
-                    working directory to which the process should change on \
-                    daemon start.'),
+            dest='working_directory', default="/", help='Full path of the '\
+                    'working directory to which the process should change '\
+                    'on daemon start.'),
         make_option('--umask', action='store', dest='umask', default=0,
-            type="int", help='File access creation mask ("umask") to set for \
-                    the process on daemon start.'),
+            type="int", help='File access creation mask ("umask") to set '\
+                    'for the process on daemon start.'),
         make_option('--pidfile', action='store', dest='pidfile', default=None,
-            help='Context manager for a PID lock file. When the daemon \
-                    context opens and closes, it enters and exits the \
-                    `pidfile` context manager.'),
+            help='Context manager for a PID lock file. When the daemon '\
+                    'context opens and closes, it enters and exits the '\
+                    '`pidfile` context manager.'),
         make_option('--detach_process', action='store', default=True,
-            dest='detach_process', help='If ``True``, detach the process \
-                    context when opening the daemon context; if ``False``, \
-                    do not detach.'),
-        make_option('--uid', action='store', dest='uid', help='The user ID \
-                ("UID") value to switch the process to on daemon start.',
+            dest='detach_process', help='If ``True``, detach the process '\
+                    'context when opening the daemon context; if ``False``, '\
+                    'do not detach.'),
+        make_option('--uid', action='store', dest='uid', help='The user ID '\
+                '("UID") value to switch the process to on daemon start.',
                 default=None),
-        make_option('--gid', action='store', dest='gid', help='The group ID \
-                ("GID") value to switch the process to on daemon start.',
+        make_option('--gid', action='store', dest='gid', help='The group ID '\
+                '("GID") value to switch the process to on daemon start.',
                 default=None),
         make_option('--prevent_core', action='store', dest='prevent_core',
-            default=True, help='If true, prevents the generation of core \
-                    files, in order to avoid leaking sensitive information \
-                    from daemons run as `root`.'),
+            default=True, help='If true, prevents the generation of core '\
+                    'files, in order to avoid leaking sensitive information '\
+                    'from daemons run as `root`.'),
         make_option('--stdin', action='store', dest='stdin', default=None,
             help='Standard In'),
         make_option('--stdout', action='store', dest='stdout', default=None,
@@ -279,7 +275,8 @@ class Command(BaseCommand):  # DaemonCommand
         self.context.signal_map = {
                 signal.SIGTERM: self.tear_down,
                 signal.SIGHUP: 'terminate',
-                signal.SIGUSR1: self.reload,
+                signal.SIGUSR1: self.reload_config,
+                signal.SIGUSR2: self.tear_down,
         }
 
         logger.debug("Trying to open daemon context.")
