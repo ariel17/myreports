@@ -18,8 +18,5 @@ def show_all_reports(request, ip=None, id=None):
     server = get_object_or_404(Server, **({'ip': ip} if ip else {'id': id}))
 
     params = {'server': server, 'sections': {}}
-    for r in server.reports.all():
-        for s in r.sections.all():
-            params['sections'].update({s.id: s.get_content(server)})
 
     return render_to_response('reports.html', params)

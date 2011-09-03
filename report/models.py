@@ -49,34 +49,6 @@ class Section(models.Model):
     def __unicode__(self):
         return u"%s" % self.title
 
-    def get_current_values(self, server):
-        """
-        Returns the current values of all variables involved in this section
-        for a given server.
-        """
-        server.connect()
-        d = {}
-        for v in self.variables.all():
-            d.update(server.show_status(pattern=v.name))
-        server.close()
-        return d
-
-    def get_history(self, server):
-        """
-        Returns all previous snapshots for all variable involved in this
-        section for a given server.
-        """
-        return Snapshot.objects.filter(server=server, variable=v)
-
-    def get_content(self, server):
-        """
-        Encapsules the workload of checking its corresponding method
-        (get_current_value or get_history) by the value of 'period' field.
-        """
-        # return (self.get_current_values(server) if not self.period else
-        #         self.get_history(server))
-        pass
-
 
 class Report(models.Model):
     """
@@ -93,9 +65,3 @@ class Report(models.Model):
 
     def __unicode__(self):
         return u"%s" % (self.title)
-
-    def get_content(self, server):
-        """
-        Delegates to sections to check its own content to show.
-        """
-        return [(s, s.get_content()) for s in self.sections.all()]
