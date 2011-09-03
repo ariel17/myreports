@@ -20,11 +20,11 @@ class MySQLHandler(models.Model):
     """
     ip = models.IPAddressField(_("IP address"), help_text="IP address where "\
             "this MySQL server instance is running.")
-    port = models.PositiveIntegerField(_("Port"), default=3306, \
+    port = models.PositiveIntegerField(_("Port"), default=3306,
             help_text="Port where this instance is binded.")
-    username = models.CharField(_("User name"), max_length=20, \
+    username = models.CharField(_("User name"), max_length=20,
             help_text="User name to stablish a connection.")
-    password = models.CharField(_("Password"), max_length=100, blank=True, \
+    password = models.CharField(_("Password"), max_length=100, blank=True,
             help_text="Password for this connection.")
 
     class Meta:
@@ -37,9 +37,9 @@ class MySQLHandler(models.Model):
         """
         Stablish a connection using current parameters.
         """
-        params = {"host": self.ip, "port": self.port, "user": self.username, \
+        params = {"host": self.ip, "port": self.port, "user": self.username,
                 "passwd": self.password}
-        logger.info("Connecting to MySQL server with params '%s'." % \
+        logger.info("Connecting to MySQL server with params '%s'." %
                 repr(params))
         self.conn = MySQLdb.connect(**params)
 
@@ -120,22 +120,27 @@ class Server(MySQLHandler):
         for r in self.reports.all():
             for s in r.sections.all():
                 for v in s.variables.all():
-                    variables.add((s.period, v))
+                    variables.add((s.period, v, s.period))
         return variables
 
-    def get_max_period(self):
+    def get_periods(self):
         """
+        Determines the minimun time period for heartbeat. This period is
+        determined by the Greatest Common Divisor between all specified time 
+        periods in sections.
         """
         def gcd(a, b):
             """
             """
-            if b == 0: 
+            if b == 0:
                 return 0
             if a % b == 0:
                 return b
             return gcd(a, a % b)
-        periods = [v[0] for v in self.get_variables()]
-        # based on http://code.activestate.com/recipes/577282-finding-the-gcd-of-a-list-of-numbers-aka-reducing-/
-        return reduce(gcd, periods)
 
-        
+        # only variables with numeric period (period == None means chekc only 
+        # current values).
+        periods = [v[0] for v in self.get_variables() if v[2] is not None]
+        # based on http://code.activestate.com/recipes/577282-finding-the-
+        #   gcd-of-a-list-of-numbers-aka-reducing-/
+        return reduce(gcd, periods), max(periods)

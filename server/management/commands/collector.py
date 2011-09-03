@@ -115,25 +115,34 @@ class Worker(threading.Thread):
             logger.debug("Connecting to server.")
             self.server.connect()
             # this is the minimal time period between checks (heartbeat)
-            period = self.server.get_max_period()
-            logger.debug("Heartbeat period: %d seconds." % period)
+            min_period, max_period = self.server.get_periods()
+            logger.debug("Heartbeat period: %d seconds." % min_period)
             variables = self.server.get_variables()
             logger.debug("Variables to check: %s" % variables)
             base_time = time()
             while self.running:
-                logger.debug("Sleeping %d seconds." % period)
-                sleep(period)
+                logger.debug("Sleeping %d seconds." % min_period)
+                sleep(min_period)
                 # getting actual seconds passed since thread start as int
                 t = int(floor(time() - base_time))
                 # check values for all variables of all reports assigned.
-                for (s, v) in variables:
-                    if v.type <> 'n':  # only numeric status variables
+                for (s, v, period) in variables:
+                    # only numeric status variables and numeric periods (period
+                    # == None means check only current values).
+                    if v.type <> 'n' or not period:
                         continue
                     # if t matchs a time check period of this variable, then
                     # do a snapshot.
                     if t % s == 0:
                         s = Snapshot.take_snapshot(self.server, v)
                         logger.debug("Taked snapshot: %s." % s)
+                # if t has reached max_period (time when all variables has 
+                # been checked at least once), then base_time moves into
+                # now.
+                if t >= max_period:
+                    base_time = time()
+                    logger.debug("Reseted base time to now.")
+
         except Exception:
             logger.exception("Error occoured when contacting server:")
         finally:
