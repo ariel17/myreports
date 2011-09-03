@@ -1,6 +1,5 @@
 # models
 from django.db import models
-from report.models import Report
 
 # utils
 from django.utils.translation import ugettext as _
@@ -26,6 +25,7 @@ class MySQLHandler(models.Model):
             help_text="User name to stablish a connection.")
     password = models.CharField(_("Password"), max_length=100, blank=True,
             help_text="Password for this connection.")
+    __conn = None
 
     class Meta:
         abstract = True
@@ -37,18 +37,19 @@ class MySQLHandler(models.Model):
         """
         Stablish a connection using current parameters.
         """
-        params = {"host": self.ip, "port": self.port, "user": self.username,
-                "passwd": self.password}
-        logger.info("Connecting to MySQL server with params '%s'." %
-                repr(params))
-        self.conn = MySQLdb.connect(**params)
+        if not self.__conn:
+            params = {"host": self.ip, "port": self.port,
+                    "user": self.username, "passwd": self.password}
+            logger.info("Connecting to MySQL server with params '%s'." %
+                    repr(params))
+            self.__conn = MySQLdb.connect(**params)
 
     def close(self):
         """
         Close the current connection.
         """
         try:
-            self.conn.close()
+            self.__conn.close()
         except:
             pass
         logger.debug("%s Connection closed." % self)
@@ -62,7 +63,7 @@ class MySQLHandler(models.Model):
         Execute a query with the statement given in 'sql' parameter. Also
         'parsefunc' function is applied if it is not None.
         """
-        cur = self.conn.cursor()
+        cur = self.__conn.cursor()
         logger.debug("Executing query: %s" % sql)
         cur.execute(sql)
         result = cur.fetchall()
@@ -84,6 +85,12 @@ class MySQLHandler(models.Model):
         sql = "SHOW STATUS %s;" % ("LIKE '%s'" % pattern if pattern else '')
         return self.doquery(sql, dict)
 
+    def show_variables(self):
+        """
+        Returns all system variables' values for new connections.
+        """
+        return self.doquery("SHOW GLOBAL VARIABLES;", dict)
+
 
 class Server(MySQLHandler):
     """
@@ -92,55 +99,6 @@ class Server(MySQLHandler):
     active = models.BooleanField(_("Is active"), default=True)
     name = models.CharField(_("Name"), max_length=100, \
             help_text="Server name or ID.")
-    reports = models.ManyToManyField(Report, help_text="Selected reports for "\
-            "this server")
 
     def __unicode__(self):
         return u"%s [%s:%d]" % (self.name, self.ip, self.port)
-
-    def show_variables(self):
-        """
-        Returns all system variables' values for new connections.
-        """
-        return self.doquery("SHOW GLOBAL VARIABLES;", dict)
-
-    def available_reports(self):
-        """
-        Returns a comma separated list with the name of all reports assigned
-        to this server.
-        """
-        return u",".join([r.title for r in self.reports.all()])
-
-    def get_variables(self):
-        """
-        Returns all variables associated to this server through reports and its
-        sections.
-        """
-        variables = set()
-        for r in self.reports.all():
-            for s in r.sections.all():
-                for v in s.variables.all():
-                    variables.add((s.period, v, s.period))
-        return variables
-
-    def get_periods(self):
-        """
-        Determines the minimun time period for heartbeat. This period is
-        determined by the Greatest Common Divisor between all specified time 
-        periods in sections.
-        """
-        def gcd(a, b):
-            """
-            """
-            if b == 0:
-                return 0
-            if a % b == 0:
-                return b
-            return gcd(a, a % b)
-
-        # only variables with numeric period (period == None means chekc only 
-        # current values).
-        periods = [v[0] for v in self.get_variables() if v[2] is not None]
-        # based on http://code.activestate.com/recipes/577282-finding-the-
-        #   gcd-of-a-list-of-numbers-aka-reducing-/
-        return reduce(gcd, periods), max(periods)

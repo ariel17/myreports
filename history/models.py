@@ -38,7 +38,7 @@ class Snapshot(models.Model):
         this moment.
         """
         value = server.show_status(pattern=variable.name)
-        s = Snapshot(server=server, variable=variable, 
+        s = Snapshot(server=server, variable=variable,
                 value=value[variable.name])
         s.save()
         return s
