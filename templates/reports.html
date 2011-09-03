@@ -19,25 +19,29 @@
             </tr>
             <tr>
                 <td>
-                    <table border="0">
-                        {% if not s.period %}
-                            <tr>
-                                <td><b>Variable</b></td>
-                                <td></td>
-                                <td><b>Value</b></td>
-                            </tr>
-                            {% for sectionid, contents in sections.items in  %}
-                                {% if sectionid == s.id %}
-                                    {% for variable, value in contents.items %}
-                                        <tr>
-                                            <td>{{ variable }}</td>
-                                            <td></td>
-                                            <td>{{ value }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
+                    <table border="1">
+                        <tr>
+                            <td><b>Variable</b></td>
+                            <td></td>
+                            <td><b>Value</b></td>
+                            {% if s.period %}
+                                <td><b>Date</b></td>
+                            {% endif %}
+                        </tr>
+                        {% for sectionid, snapshots in sections.items %}
+                            {% if sectionid == s.id %}
+                                {% for s in snapshots %}
+                                    <tr>
+                                        <td>{{ s.variable.name }}</td>
+                                        <td></td>
+                                        <td>{{ s.value }}</td>
+                                        {% if not s.period %}
+                                            <td>{{ s.time }}</td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
                     </table>                        
                 </td>                    
             </tr>

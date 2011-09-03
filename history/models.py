@@ -32,7 +32,7 @@ class Snapshot(models.Model):
         return u"%s=%s" % (self.variable.name, self.value)
 
     @staticmethod
-    def take_snapshot(server, variable):
+    def take_snapshot(server, variable, must_save=True):
         """
         Takes an snapshot for the value of the given variable on this server at
         this moment.
@@ -40,8 +40,23 @@ class Snapshot(models.Model):
         value = server.show_status(pattern=variable.name)
         s = Snapshot(server=server, variable=variable,
                 value=value[variable.name])
-        s.save()
+        if must_save:
+            s.save()
         return s
+
+    @staticmethod
+    def get_history(server, variables):
+        """
+        """
+        return Snapshot.objects.filter(server=server, 
+                variable__id__in=[v.id for v in variables])
+
+    @staticmethod
+    def get_current_values(server, variables):
+        """
+        """
+        return [Snapshot.take_snapshot(server, v, False) for v in
+                variables]
 
     def update(self):
         """
