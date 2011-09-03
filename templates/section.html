@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Section{% endblock %}
+{% block title %}Section {{ title }}{% endblock %}
 
-{% block body %}{% endblock %}
+{% block body %}
+
+    <table border="1">
+        <tr>
+            <td>Variable</td>
+            <td>Current Value</td>
+            <td>Time</td>
+        </tr>
+        {% for s in snapshots %}
+            <tr>
+                <td>{{ s.variable.name }}</td>
+                <td>{{ s.value }}</td>
+                <td>{{ s.time }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}

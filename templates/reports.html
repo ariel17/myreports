@@ -6,28 +6,42 @@
 
 <table border="0">
     {% for r in server.reports.all %}
-    <tr><td><h1>{{ r.title }}</h1></td></tr>
-    {% for s in r.sections.all %}
-        <tr><td colspan="6"><h2>{{ s.title }}</h2></td></tr>
-        <tr>
-            <td>Name</td>
-            <td></td>
-            <td>Type</td>
-            <td></td>
-            <td>Description</td>
-            <td></td>
-        </tr>
-        {% for v in s.variables.all %}
+        <tr><td><h1>{{ r.title }}</h1></td></tr>
+        {% for s in r.sections.all %}
             <tr>
-                <td>{{ v.name }}</td>
-                <td></td>
-                <td>{{ v.type }}</td>
-                <td></td>
-                <td>{{ v.description }}</td>
                 <td></td>
             </tr>
+            <tr>
+                <td><h2>{{ s.title }}</h2></td>
+            </tr>
+            <tr>
+                <td>Check type: {% if not s.period %}Current values{% else %}Every {{ s.period }} seconds{% endif %}.</td>
+            </tr>
+            <tr>
+                <td>
+                    <table border="0">
+                        {% if not s.period %}
+                            <tr>
+                                <td><b>Variable</b></td>
+                                <td></td>
+                                <td><b>Value</b></td>
+                            </tr>
+                            {% for sectionid, contents in sections.items in  %}
+                                {% if sectionid == s.id %}
+                                    {% for variable, value in contents.items %}
+                                        <tr>
+                                            <td>{{ variable }}</td>
+                                            <td></td>
+                                            <td>{{ value }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </table>                        
+                </td>                    
+            </tr>
         {% endfor %}
-    {% endfor %}
     {% endfor %}
 </table>
 
