@@ -70,7 +70,6 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
-from serverreport.model import ServerReport
 from history.models import Snapshot
 from optparse import make_option
 
@@ -113,20 +112,14 @@ class Worker(threading.Thread):
     def run(self):
         logger.debug("Core initialized.")
         try:
-            try:
-                serverreport = ServerReport.objects.get(server=self.server)
-            except ServerReport.DoesNotExist, (e):
-                logger.exception("Not found server-report association:")
-                return
-
             logger.debug("Connecting to server.")
             self.server.connect()
 
             # this is the minimal time period between checks (heartbeat)
-            min_period, max_period = serverreport.get_periods()
+            min_period, max_period = self.server.get_periods()
             logger.debug("Heartbeat period: %d seconds." % min_period)
 
-            variables = serverreport.get_variables()
+            variables = self.server.get_variables()
             logger.debug("Variables to check: %s" % variables)
 
             base_time = time()

@@ -4,7 +4,7 @@ from django.db import models
 # utils
 from django.utils.translation import ugettext as _
 import settings
-from history.models import Snapshot
+# from history.models import Snapshot
 
 import logging
 
@@ -73,8 +73,9 @@ class Section(models.Model):
         Encapsules the workload of checking its corresponding method
         (get_current_value or get_history) by the value of 'period' field.
         """
-        return (self.get_current_values(server) if not self.period else
-                self.get_history(server))
+        # return (self.get_current_values(server) if not self.period else
+        #         self.get_history(server))
+        pass
 
 
 class Report(models.Model):
