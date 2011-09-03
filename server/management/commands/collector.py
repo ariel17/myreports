@@ -70,6 +70,7 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
+from serverreport.model import ServerReport
 from history.models import Snapshot
 from optparse import make_option
 
@@ -112,30 +113,43 @@ class Worker(threading.Thread):
     def run(self):
         logger.debug("Core initialized.")
         try:
+            try:
+                serverreport = ServerReport.objects.get(server=self.server)
+            except ServerReport.DoesNotExist, (e):
+                logger.exception("Not found server-report association:")
+                return
+
             logger.debug("Connecting to server.")
             self.server.connect()
+
             # this is the minimal time period between checks (heartbeat)
-            min_period, max_period = self.server.get_periods()
+            min_period, max_period = serverreport.get_periods()
             logger.debug("Heartbeat period: %d seconds." % min_period)
-            variables = self.server.get_variables()
+
+            variables = serverreport.get_variables()
             logger.debug("Variables to check: %s" % variables)
+
             base_time = time()
             while self.running:
                 logger.debug("Sleeping %d seconds." % min_period)
                 sleep(min_period)
+
                 # getting actual seconds passed since thread start as int
                 t = int(floor(time() - base_time))
+
                 # check values for all variables of all reports assigned.
                 for (s, v, period) in variables:
                     # only numeric status variables and numeric periods (period
                     # == None means check only current values).
                     if v.type <> 'n' or not period:
                         continue
+
                     # if t matchs a time check period of this variable, then
                     # do a snapshot.
                     if t % s == 0:
                         s = Snapshot.take_snapshot(self.server, v)
                         logger.debug("Taked snapshot: %s." % s)
+                
                 # if t has reached max_period (time when all variables has 
                 # been checked at least once), then base_time moves into
                 # now.
