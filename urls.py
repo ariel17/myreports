@@ -23,8 +23,9 @@ urlpatterns = patterns('',
 
     (r'^server/(?P<id>\d+)/$', show_all_reports),
 
-    (r'^report/(?P<id>\d+)/$', show_report),
+    (r'^report/(?P<report_id>\d+)/server/(?P<server_id>\d+)/$', show_report),
 
-    (r'^report/section/(?P<id>\d+)/$', show_section),
+    (r'^report/section/(?P<section_id>\d+)/server/(?P<server_id>\d+)/$', 
+        show_section),
 
 )
