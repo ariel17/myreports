@@ -21,8 +21,6 @@ urlpatterns = patterns('',
 
     # application patterns
 
-    (r'^server/(?P<ip>[0-9\.]{7,15})/$', show_all_reports),
-
     (r'^server/(?P<id>\d+)/$', show_all_reports),
 
     (r'^report/(?P<id>\d+)/$', show_report),
