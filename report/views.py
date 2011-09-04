@@ -19,4 +19,5 @@ def show_section(request, section_id, server_id):
     """
     section = get_object_or_404(Section, id=section_id)
     server = get_obejct_or_404(Server, id=server_id)
+
     return render_to_response('section.html')

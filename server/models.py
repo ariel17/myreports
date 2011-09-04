@@ -152,8 +152,8 @@ class Server(MySQLHandler):
 class ReportByServer(models.Model):
     """
     """
-    report = models.ForeignKey(Report)
     server = models.ForeignKey(Server)
+    report = models.ForeignKey(Report)
     uuid = UUIDField(editable=False)
 
     def __unicode__(self):
