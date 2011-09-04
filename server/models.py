@@ -1,6 +1,7 @@
 # models
 from django.db import models
 from report.models import Report
+from fields import UUIDField
 
 # utils
 from django.utils.translation import ugettext as _
@@ -100,8 +101,8 @@ class Server(MySQLHandler):
     active = models.BooleanField(_("Is active"), default=True)
     name = models.CharField(_("Name"), max_length=100, \
             help_text="Server name or ID.")
-    reports = models.ManyToManyField(Report, help_text="Selected reports for "\
-            "this server")
+    reports = models.ManyToManyField(Report, through='ReportByServer', 
+            help_text="Selected reports for this server")
                                                                                  
     def available_reports(self): 
         """
@@ -146,3 +147,15 @@ class Server(MySQLHandler):
 
     def __unicode__(self):
         return u"%s [%s:%d]" % (self.name, self.ip, self.port)
+
+
+class ReportByServer(models.Model):
+    """
+    """
+    report = models.ForeignKey(Report)
+    server = models.ForeignKey(Server)
+    uuid = UUIDField(editable=False)
+
+    def __unicode__(self):
+        return u"ReportByServer report_id=%d server_id=%d uuid=%s" % \
+                (self.report.id, self.server.id, self.uuid)
