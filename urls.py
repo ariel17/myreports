@@ -21,11 +21,10 @@ urlpatterns = patterns('',
 
     # application patterns
 
-    (r'^server/(?P<id>\d+)/$', show_all_reports),
+    url(r'^server/(?P<id>\d+)/$', show_all_reports, name='show_all_reports'),
 
-    (r'^report/(?P<report_id>\d+)/server/(?P<server_id>\d+)/$', show_report),
+    url(r'^direct/(?P<uuid>[\w-]+)/$', show_report, name='show_report'),
 
-    (r'^report/section/(?P<section_id>\d+)/server/(?P<server_id>\d+)/$', 
-        show_section),
+    url(r'^direct/(?P<uuid>[\w-]+)/(?P<id>\d+)/$', show_section, name='show_section'),
 
 )

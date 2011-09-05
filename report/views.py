@@ -1,23 +1,43 @@
-from django.http import (HttpResponse, HttpResponseRedirect,
-        HttpResponseBadRequest, HttpRequest)
-from django.shortcuts import render_to_response, Http404, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404
 
-from report.models import Report, Section
-from server.models import Server
+from server.models import ReportByServer
+from history.models import Snapshot
 
 
-def show_report(request, report_id, server_id):
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+def show_report(request, uuid=None):
     """
     """
-    report = get_object_or_404(Report, id=report_id)
-    server = get_obejct_or_404(Server, id=server_id)
-    render_to_response('report.html')
+    rs = get_object_or_404(ReportByServer, uuid=uuid)
+    params = {'report': rs.report, 'sections': {}}
+
+    for s in rs.report.sections.all():
+        if not s.period:
+            if rs.server.connect():
+                ss = Snapshot.get_current_values(rs.server, s.variables.all())
+                
+                logger.debug("Current values collected for section: %s" %
+                        repr(ss))
+                params['sections'][s.id] = ss
+            else:
+                # TODO: return 500
+                pass
+                                                                            
+        else:
+            ss = Snapshot.get_history(rs.server, s.variables.all())
+            logger.debug("History collected for section: %s" % repr(ss))
+            params['sections'][s.id] = ss
+
+    logger.debug("Params to use: %s" % repr(params))
+    return render_to_response('report.html', params)
 
 
-def show_section(request, section_id, server_id):
+def show_section(request, uuid, id):
     """
     """
-    section = get_object_or_404(Section, id=section_id)
-    server = get_obejct_or_404(Server, id=server_id)
-
-    return render_to_response('section.html')
+    pass

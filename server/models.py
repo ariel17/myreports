@@ -40,11 +40,17 @@ class MySQLHandler(models.Model):
         Stablish a connection using current parameters.
         """
         if not self.__conn:
-            params = {"host": self.ip, "port": self.port,
-                    "user": self.username, "passwd": self.password}
-            logger.info("Connecting to MySQL server with params '%s'." %
-                    repr(params))
-            self.__conn = MySQLdb.connect(**params)
+            try:
+                params = {"host": self.ip, "port": self.port,
+                        "user": self.username, "passwd": self.password}
+                logger.info("Connecting to MySQL server with params '%s'." %
+                        repr(params))
+                self.__conn = MySQLdb.connect(**params)
+                return True
+            except Exception, (e):
+                logger.exception("Can not connect to MySQL Server:")
+            return False
+        return True
 
     def close(self):
         """

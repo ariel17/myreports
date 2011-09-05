@@ -1,8 +1,6 @@
-from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
-        HttpResponseBadRequest)
-from django.shortcuts import render_to_response, Http404, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404
 
-from server.models import Server
+from server.models import Server, ReportByServer
 from history.models import Snapshot
 
 import logging
@@ -16,14 +14,22 @@ def show_all_reports(request, ip=None, id=None):
     """
     server = get_object_or_404(Server, **({'ip': ip} if ip else {'id': id}))
 
-    params = {'server': server, 'sections': {}}
+    params = {'server': server, 'reports': {}, 'sections': {},}
     for r in server.reports.all():
+        params['reports'][r.id] = ReportByServer.objects.get(server=server,
+                report=r).uuid
         for s in r.sections.all():
             if not s.period:
-                ss = Snapshot.get_current_values(server, s.variables.all())
-                logger.debug("Current values collected for section: %s" %
-                        repr(ss))
-                params['sections'][s.id] = ss
+                if server.connect():
+                    ss = Snapshot.get_current_values(server, s.variables.all())
+                    
+                    logger.debug("Current values collected for section: %s" %
+                            repr(ss))
+                    params['sections'][s.id] = ss
+                else:
+                    # TODO: return 500
+                    pass
+
             else:
                 ss = Snapshot.get_history(server, s.variables.all())
                 logger.debug("History collected for section: %s" % repr(ss))

@@ -38,6 +38,8 @@ class Snapshot(models.Model):
         this moment.
         """
         value = server.show_status(pattern=variable.name)
+        if len(value.keys()) == 0:  # pattern not found
+            return None
         s = Snapshot(server=server, variable=variable,
                 value=value[variable.name])
         if must_save:
@@ -55,8 +57,11 @@ class Snapshot(models.Model):
     def get_current_values(server, variables):
         """
         """
-        return [Snapshot.take_snapshot(server, v, False) for v in
-                variables]
+        values = []
+        for v in variables:
+            s = Snapshot.take_snapshot(server, v, False)
+            if s:
+                values.append(s)
 
     def update(self):
         """

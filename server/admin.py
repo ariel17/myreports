@@ -9,7 +9,7 @@ class ServerAdmin(admin.ModelAdmin):
     ordering = ("name", "ip", "active")
 
 class ReportByServerAdmin(admin.ModelAdmin):
-    list_display = ("server", "report",)
+    list_display = ("server", "report", "uuid")
 
 
 admin.site.register(Server, ServerAdmin)
