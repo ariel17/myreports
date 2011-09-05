@@ -1,22 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Section {{ title }}{% endblock %}
+{% block title %}Section {{ section.title }}{% endblock %}
 
 {% block body %}
 
     <table border="1">
         <tr>
-            <td>Variable</td>
-            <td>Current Value</td>
-            <td>Time</td>
+            <td><h2>{{ section.title }}</h2></td>
         </tr>
-        {% for s in snapshots %}
-            <tr>
-                <td>{{ s.variable.name }}</td>
-                <td>{{ s.value }}</td>
-                <td>{{ s.time }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+        <tr>
+            <td>Check type: {% if not section.period %}Current values{% else %}Every {{ section.period }} seconds{% endif %}.</td>
+        </tr>
+        <tr>
+            <td>
+                <table border="1">
+                    <tr>
+                        <td><b>Variable</b></td>
+                        <td>&nbsp;</td>
+                        <td><b>Value</b></td>
+                        {% if section.period %}
+                            <td>&nbsp;</td>
+                            <td><b>Date</b></td>
+                        {% endif %}
+                    </tr>
+                    {% for sectionid, snapshots in sections.items %}
+                        {% if sectionid == section.id %}
+                            {% for ss in snapshots %}
+                                <tr>
+                                    <td>{{ ss.variable.name }}</td>
+                                    <td>&nbsp;</td>
+                                    <td>{{ ss.value }}</td>
+                                    {% if section.period %}
+                                        <td>&nbsp;</td>
+                                        <td>{{ ss.time }}</td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </table>                        
+            </td>
+        </tr>
+    </table>    
 
 {% endblock %}

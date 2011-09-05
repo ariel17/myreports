@@ -1,50 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Report {{ report.name }}{% endblock %}
+{% block title %}Report {{ section.title }}{% endblock %}
 
 {% block body %}
-
-<table border="0">
-    <tr>
-        <td><h2>{{ report.name }}</h2></td>
-    </tr>
-    {% for s in report.sections.all %}
+    <table border="0">
         <tr>
-            <td>&nbsp;</td>
+            <td><h2>{{ report.name }}</h2></td>
         </tr>
-        <tr>
-            <td><h2>{{ s.title }}</h2></td>
-        </tr>
-        <tr>
-            <td>Check type: {% if not s.period %}Current values{% else %}Every {{ s.period }} seconds{% endif %}.</td>
-        </tr>
-        <tr>
-            <td>
-                <table border="1">
-                    <tr>
-                        <td><b>Variable</b></td>
-                        <td>&nbsp;</td>
-                        <td><b>Value</b></td>
-                        {% if s.period %}
-                            <td><b>Date</b></td>
-                        {% endif %}
-                    </tr>
-                    {% for sectionid, snapshots in sections.items %}
-                        {% if sectionid == s.id %}
-                            {% for s in snapshots %}
-                                <tr>
-                                    <td>{{ s.variable.name }}</td>
-                                    <td>&nbsp;</td>
-                                    <td>{{ s.value }}</td>
-                                    {% if not s.period %}
-                                        <td>{{ s.time }}</td>
-                                    {% endif %}
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                    {% endfor %}
-                </table>                        
-            </td>
-        </tr>
-    {% endfor %}
+        {% for s in report.sections.all %}
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td><h2>{{ s.title }}</h2></td>
+            </tr>
+            <tr>
+                <td>Check type: {% if not s.period %}Current values{% else %}Every {{ s.period }} seconds{% endif %}.</td>
+            </tr>
+            <tr>
+                <td>
+                    <table border="1">
+                        <tr>
+                            <td><b>Variable</b></td>
+                            <td>&nbsp;</td>
+                            <td><b>Value</b></td>
+                            {% if s.period %}
+                                <td><b>Date</b></td>
+                            {% endif %}
+                        </tr>
+                        {% for sectionid, snapshots in sections.items %}
+                            {% if sectionid == s.id %}
+                                {% for ss in snapshots %}
+                                    <tr>
+                                        <td>{{ ss.variable.name }}</td>
+                                        <td>&nbsp;</td>
+                                        <td>{{ s.value }}</td>
+                                        {% if s.period %}
+                                            <td>{{ ss.time }}</td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </table>                        
+                </td>
+            </tr>
+        {% endfor %}
+    </table>    
 {% endblock %}

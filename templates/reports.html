@@ -23,7 +23,16 @@
                 <td>&nbsp;</td>
             </tr>
             <tr>
-                <td><h2>{{ s.title }}</h2></td>
+                <td>
+                    <h2>
+                        {{ s.title }}&nbsp;
+                        {% for report_id, uuid in reports.items %}
+                            {% if report_id == r.id %}
+                                <a href="{% url show_section uuid s.id %}">[direct link]</a>
+                            {% endif %}
+                        {% endfor %}
+                    </h2>
+                </td>
             </tr>
             <tr>
                 <td>Check type: {% if not s.period %}Current values{% else %}Every {{ s.period }} seconds{% endif %}.</td>
