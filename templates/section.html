@@ -1,65 +1,59 @@
 {% block section %}
 
-    <!-- block_section -->
+    <div id="section-{{ server.id }}-{{ report.id }}-{{ section.id }}" name="section-{{ server.id }}-{{ report.id }}-{{ section.id }}">
+        <div id="section_title" name="section_title">
+            <h2>
+                <a name="section-{{ server.id }}-{{ report.id }}-{{ section.id }}">Section {{ section.title }}</a>&nbsp;
+                {% for sectionid, dict in sections.items %}
+                    {% if sectionid == section.id %}
+                        {% for key, content in dict.items %}
+                            {% if key == "permalink" %}
+                                <a href="{{ content }}">[direct link]</a>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </h2>
+        </div>
 
-        <table border="1">
-            <tr>
-                <td>
-                    <h2>
-                        {{ section.title }}&nbsp;
-                        {% for sectionid, dict in sections.items %}
-                            {% if sectionid == section.id %}
-                                {% for key, content in dict.items %}
-                                    {% if key == "permalink" %}
-                                        <a href="{{ content }}">[direct link]</a>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                        {% endfor %}
-                    </h2>
-                </td>
-            </tr>
-            <tr>
-                <td>Check type: {% if not section.period %}Current values{% else %}Every {{ section.period }} seconds{% endif %}.</td>
-            </tr>
-            <tr>
-                <td>
-                    <table border="1">
-                        <tr>
-                            <td><b>Variable</b></td>
-                            <td>&nbsp;</td>
-                            <td><b>Value</b></td>
-                            {% if section.period %}
-                                <td>&nbsp;</td>
-                                <td><b>Date</b></td>
-                            {% endif %}
-                        </tr>
-                        {% for sectionid, dict in sections.items %}
-                            {% if sectionid == section.id %}
-                                {% for key, content in dict.items %}
-                                    {% if key == "snapshots" %}
-                                        {% for ss in content %}
-                                            {% if ss.server.id == server.id%}
-                                                <tr>
-                                                    <td>{{ ss.variable.name }}</td>
-                                                    <td>&nbsp;</td>
-                                                    <td>{{ ss.value }}</td>
-                                                    {% if section.period %}
-                                                        <td>&nbsp;</td>
-                                                        <td>{{ ss.time }}</td>
-                                                    {% endif %}
-                                                </tr>
+        <div id="check_type" name="check_type">
+            Check type: {% if not section.period %}Current values{% else %}Every {{ section.period }} seconds{% endif %}.
+        </div>
+
+        <div id="section_content" name="section_content">
+            <table border="0">
+                <tr>
+                    <td><b>Variable</b></td>
+                    <td>&nbsp;</td>
+                    <td><b>Value</b></td>
+                    {% if section.period %}
+                        <td>&nbsp;</td>
+                        <td><b>Date</b></td>
+                    {% endif %}
+                </tr>
+                {% for sectionid, dict in sections.items %}
+                    {% if sectionid == section.id %}
+                        {% for key, content in dict.items %}
+                            {% if key == "snapshots" %}
+                                {% for ss in content %}
+                                    {% if ss.server.id == server.id %}
+                                        <tr>
+                                            <td>{{ ss.variable.name }}</td>
+                                            <td>&nbsp;</td>
+                                            <td>{{ ss.value }}</td>
+                                            {% if section.period %}
+                                                <td>&nbsp;</td>
+                                                <td>{{ ss.time }}</td>
                                             {% endif %}
-                                        {% endfor %}
+                                        </tr>
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
                         {% endfor %}
-                    </table>                        
-                </td>
-            </tr>
-        </table>    
-        
-    <!-- /block_section -->
+                    {% endif %}
+                {% endfor %}
+            </table>                        
+        </div>
+    </div>        
 
 {% endblock %}

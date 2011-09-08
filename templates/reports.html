@@ -3,30 +3,34 @@
 {% block title %}Reports for {{ server.name }}{% endblock %}
 
 {% block body %}
-
-<table border="1">
-
-    <tr>
-        <td>
+    
+    <div id="reports-{{ server.id }}" name="reports-{{ server.id }}">
+        <div id="reports_title" name="reports_title">
             <h1>
                 Reports for server {{ server.name }}&nbsp;
                 <a href="{{ permalink }}">[direct link]</a>
             </h1>
-        </td>
-    </tr>
+        </div>
 
-    {% for report in server.reports.all %}
-        <tr>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <td>
-                {% include "report.html" %}
-            </td>
-        </tr>
+        <div id="reports_index" name="reports_index">
+            <ul>
+                {% for r in server.reports.all %}
+                    <li>
+                        <a href="#report-{{ server.id }}-{{ r.id }}">Report {{ r.title }}</a>
+                        <ul>
+                            {% for s in r.sections.all %}
+                            <li><a href="#section-{{ server.id }}-{{ r.id }}-{{ s.id }}">Section {{ s.title }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
 
-
-    {% endfor %}
-</table>
+        {% for report in server.reports.all %}
+            <hr />
+            {% include "report.html" %}
+        {% endfor %}
+    </div>
 
 {% endblock %}

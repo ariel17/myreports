@@ -1,32 +1,20 @@
 {% block report %}
 
-    <!-- block_report -->
+    <div id="report-{{ server.id }}-{{ report.id }}" name="report-{{ server.id }}-{{ report.id }}">
+        <div id="report_title" name="report_title">
+            <h2>
+                <a name="report-{{ server.id }}-{{ report.id }}">Report {{ report.title }}</a>&nbsp;
+                {% for reportid, permalink in reports.items %}
+                    {% if reportid == report.id %}
+                        <a href="{{ permalink }}">[direct link]</a>
+                    {% endif %}
+                {% endfor %}
+            </h2>
+        </div>
 
-        <table border="1">
-            <tr>
-                <td>
-                    <h2>
-                        Report {{ report.title }}&nbsp;
-                        {% for reportid, permalink in reports.items %}
-                            {% if reportid == report.id %}
-                                <a href="{{ permalink }}">[direct link]</a>
-                            {% endif %}
-                        {% endfor %}
-                    </h2>
-                </td>
-            </tr>
-            {% for section in report.sections.all %}
-                <tr>
-                    <td>&nbsp;</td>
-                </tr>
-                <tr>
-                    <td>
-                        {% include "section.html" %}
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>    
-
-    <!-- /block_report -->
+        {% for section in report.sections.all %}
+            {% include "section.html" %}
+        {% endfor %}
+    </div>    
 
 {% endblock %}
