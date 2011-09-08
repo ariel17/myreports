@@ -48,6 +48,10 @@ class Section(models.Model):
     def __unicode__(self):
         return u"%s" % self.title
 
+    @models.permalink
+    def get_absolute_url(self, report_server_uuid):
+        return ('show_section', (report_server_uuid, self.id,))
+
 
 class Report(models.Model):
     """
@@ -64,3 +68,7 @@ class Report(models.Model):
 
     def __unicode__(self):
         return u"%s" % (self.title)
+
+    @models.permalink
+    def get_absolute_url(self, report_server_uuid):
+        return ('show_report', (report_server_uuid,))

@@ -154,6 +154,10 @@ class Server(MySQLHandler):
     def __unicode__(self):
         return u"%s [%s:%d]" % (self.name, self.ip, self.port)
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('show_all_reports', (self.id,))
+
 
 class ReportByServer(models.Model):
     """
