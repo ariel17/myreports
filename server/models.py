@@ -15,6 +15,20 @@ import MySQLdb
 logger = logging.getLogger(__name__)
 
 
+def to_list_dict(rs, headers):
+    """
+    Converts a resultset, given by 'rs' to a list of dictionaries, using 
+    'headers' as ordered column names.
+    """
+    result = []
+    for row in rs:
+        d = {}
+        for (pos, col_name) in enumerate(headers):
+            d[col_name] = row[pos]
+        result.append(d)
+    return result
+
+
 class MySQLHandler(models.Model):
     """
     MySQL Server model handler (abstract).
@@ -98,6 +112,15 @@ class MySQLHandler(models.Model):
         Returns all system variables' values for new connections.
         """
         return self.doquery("SHOW GLOBAL VARIABLES;", dict)
+
+    def show_processlist(self):
+        """
+        Returns all user queries actually running.
+        """
+        sql = "SHOW FULL PROCESSLIST;"
+        rs = self.doquery(sql)
+        return to_list_dict(rs, ('id', 'user', 'host', 'db', 'command', 'time',
+            'state', 'info'))
 
 
 class Server(MySQLHandler):
