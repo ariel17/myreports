@@ -11,31 +11,40 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def show_report(request, uuid=None):
+def show_report(request, uuid):
     """
     """
     rs = get_object_or_404(ReportByServer, uuid=uuid)
-    params = {'report': rs.report, 'sections': {}}
+    params = {
+            'name': 'report',
+            'title': rs.report.title,
+            'subtemplate': 'report.html',
+            'server': rs.server,
+            'report': rs.report,
+            'reports': {rs.report.id: rs.report.get_absolute_url(uuid), },
+            'sections': {}
+    }
 
     for s in rs.report.sections.all():
+        ss = None
         if not s.period:
             if rs.server.connect():
                 ss = Snapshot.get_current_values(rs.server, s.variables.all())
-                
                 logger.debug("Current values collected for section: %s" %
                         repr(ss))
-                params['sections'][s.id] = ss
             else:
                 # TODO: return 500
                 pass
-                                                                            
         else:
             ss = Snapshot.get_history(rs.server, s.variables.all())
             logger.debug("History collected for section: %s" % repr(ss))
-            params['sections'][s.id] = ss
+        params['sections'][s.id] = {
+                'snapshots': ss,
+                'permalink': s.get_absolute_url(uuid)
+        }
 
     logger.debug("Params to use: %s" % repr(params))
-    return render_to_response('report.html', params)
+    return render_to_response('direct.html', params)
 
 
 def show_section(request, uuid, id):
@@ -44,23 +53,32 @@ def show_section(request, uuid, id):
 
     s = get_object_or_404(Section, id=id)
     rs = get_object_or_404(ReportByServer, uuid=uuid)
-    params = {'section': s, 'sections': {},}
-                                                                               
+    params = {
+            'name': 'section',
+            'title': s.title,
+            'subtemplate': 'section.html',
+            'server': rs.server,
+            'section': s,
+            'sections': {},
+    }
+
+    ss = None
     if not s.period:
         if rs.server.connect():
             ss = Snapshot.get_current_values(rs.server, s.variables.all())
-            
             logger.debug("Current values collected for section: %s" %
                     repr(ss))
-            params['sections'][s.id] = ss
         else:
             # TODO: return 500
             pass
-                                                                        
     else:
         ss = Snapshot.get_history(rs.server, s.variables.all())
         logger.debug("History collected for section: %s" % repr(ss))
-        params['sections'][s.id] = ss
-                                                                               
+
+    params['sections'][s.id] = {
+            'snapshots': ss,
+            'permalink': s.get_absolute_url(uuid)
+    }
+
     logger.debug("Params to use: %s" % repr(params))
-    return render_to_response('section.html', params)
+    return render_to_response('direct.html', params)
