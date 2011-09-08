@@ -1,46 +1,65 @@
-{% extends "base.html" %}
+{% block section %}
 
-{% block title %}Section {{ section.title }}{% endblock %}
+    <!-- block_section -->
 
-{% block body %}
-
-    <table border="1">
-        <tr>
-            <td><h2>{{ section.title }}</h2></td>
-        </tr>
-        <tr>
-            <td>Check type: {% if not section.period %}Current values{% else %}Every {{ section.period }} seconds{% endif %}.</td>
-        </tr>
-        <tr>
-            <td>
-                <table border="1">
-                    <tr>
-                        <td><b>Variable</b></td>
-                        <td>&nbsp;</td>
-                        <td><b>Value</b></td>
-                        {% if section.period %}
-                            <td>&nbsp;</td>
-                            <td><b>Date</b></td>
-                        {% endif %}
-                    </tr>
-                    {% for sectionid, snapshots in sections.items %}
-                        {% if sectionid == section.id %}
-                            {% for ss in snapshots %}
-                                <tr>
-                                    <td>{{ ss.variable.name }}</td>
-                                    <td>&nbsp;</td>
-                                    <td>{{ ss.value }}</td>
-                                    {% if section.period %}
-                                        <td>&nbsp;</td>
-                                        <td>{{ ss.time }}</td>
+        <table border="1">
+            <tr>
+                <td>
+                    <h2>
+                        {{ section.title }}&nbsp;
+                        {% for sectionid, dict in sections.items %}
+                            {% if sectionid == section.id %}
+                                {% for key, content in dict.items %}
+                                    {% if key == "permalink" %}
+                                        <a href="{{ content }}">[direct link]</a>
                                     {% endif %}
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                    {% endfor %}
-                </table>                        
-            </td>
-        </tr>
-    </table>    
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </h2>
+                </td>
+            </tr>
+            <tr>
+                <td>Check type: {% if not section.period %}Current values{% else %}Every {{ section.period }} seconds{% endif %}.</td>
+            </tr>
+            <tr>
+                <td>
+                    <table border="1">
+                        <tr>
+                            <td><b>Variable</b></td>
+                            <td>&nbsp;</td>
+                            <td><b>Value</b></td>
+                            {% if section.period %}
+                                <td>&nbsp;</td>
+                                <td><b>Date</b></td>
+                            {% endif %}
+                        </tr>
+                        {% for sectionid, dict in sections.items %}
+                            {% if sectionid == section.id %}
+                                {% for key, content in dict.items %}
+                                    {% if key == "snapshots" %}
+                                        {% for ss in content %}
+                                            {% if ss.server.id == server.id%}
+                                                <tr>
+                                                    <td>{{ ss.variable.name }}</td>
+                                                    <td>&nbsp;</td>
+                                                    <td>{{ ss.value }}</td>
+                                                    {% if section.period %}
+                                                        <td>&nbsp;</td>
+                                                        <td>{{ ss.time }}</td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </table>                        
+                </td>
+            </tr>
+        </table>    
+        
+    <!-- /block_section -->
 
 {% endblock %}

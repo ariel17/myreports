@@ -1,50 +1,32 @@
-{% extends "base.html" %}
+{% block report %}
 
-{% block title %}Report {{ section.title }}{% endblock %}
+    <!-- block_report -->
 
-{% block body %}
-    <table border="0">
-        <tr>
-            <td><h2>{{ report.name }}</h2></td>
-        </tr>
-        {% for s in report.sections.all %}
-            <tr>
-                <td>&nbsp;</td>
-            </tr>
-            <tr>
-                <td><h2>{{ s.title }}</h2></td>
-            </tr>
-            <tr>
-                <td>Check type: {% if not s.period %}Current values{% else %}Every {{ s.period }} seconds{% endif %}.</td>
-            </tr>
+        <table border="1">
             <tr>
                 <td>
-                    <table border="1">
-                        <tr>
-                            <td><b>Variable</b></td>
-                            <td>&nbsp;</td>
-                            <td><b>Value</b></td>
-                            {% if s.period %}
-                                <td><b>Date</b></td>
-                            {% endif %}
-                        </tr>
-                        {% for sectionid, snapshots in sections.items %}
-                            {% if sectionid == s.id %}
-                                {% for ss in snapshots %}
-                                    <tr>
-                                        <td>{{ ss.variable.name }}</td>
-                                        <td>&nbsp;</td>
-                                        <td>{{ s.value }}</td>
-                                        {% if s.period %}
-                                            <td>{{ ss.time }}</td>
-                                        {% endif %}
-                                    </tr>
-                                {% endfor %}
+                    <h2>
+                        Report {{ report.title }}&nbsp;
+                        {% for reportid, permalink in reports.items %}
+                            {% if reportid == report.id %}
+                                <a href="{{ permalink }}">[direct link]</a>
                             {% endif %}
                         {% endfor %}
-                    </table>                        
+                    </h2>
                 </td>
             </tr>
-        {% endfor %}
-    </table>    
+            {% for section in report.sections.all %}
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>
+                        {% include "section.html" %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>    
+
+    <!-- /block_report -->
+
 {% endblock %}

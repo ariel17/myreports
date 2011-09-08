@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}{{ name|capfirst }} {{ title|capfirst }}{% endblock %}
+
+{% block body %}
+
+    {% include subtemplate %}
+
+{% endblock %}
