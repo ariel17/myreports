@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class Variable(models.Model):
     """
+    Represents a MySQL variable.
     """
     TYPE_CHOICES = (
             ('s', 'String'),
@@ -32,6 +33,8 @@ class Variable(models.Model):
 
 class Section(models.Model):
     """
+    Section agroups many related variables to conform a chart or showing
+    current values.
     """
     title = models.CharField(_("Title"), max_length=200,
             help_text="Title for this section of a report.")
