@@ -49,6 +49,8 @@ class Snapshot(models.Model):
     @staticmethod
     def get_history(server, variables):
         """
+        Returns all variables' snapshots collected for the indicated variables
+        and for the given server.
         """
         return Snapshot.objects.filter(server=server, 
                 variable__id__in=[v.id for v in variables])
@@ -56,6 +58,8 @@ class Snapshot(models.Model):
     @staticmethod
     def get_current_values(server, variables):
         """
+        Returns current values for a given server and for all variables
+        indicated.
         """
         values = []
         for v in variables:
@@ -71,3 +75,16 @@ class Snapshot(models.Model):
         self.value = self.server.show_status(pattern=self.variable.name)
         self.time = datetime.now()
         self.save()
+
+
+class Usage(models.Model):
+    """
+    Represents databases usage in a server. It is a representative usage,
+    because it not shows completly active use per database.
+    """
+    server = models.ForeignKey(Server)
+    database = models.CharField(_("Database"), help_text="")
+    datetime = models.DateField(_("Date"), help_text="")
+    qid = models.PositiveIntegerField(_("Value"), help_text="Current value"\
+            " for this date.")
+    time = models.PositiveIntegerField(_("Query time"), help_text="")

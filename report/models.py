@@ -28,7 +28,7 @@ class Variable(models.Model):
             blank=True, help_text="What this variable means.")
 
     def __unicode__(self):
-        return u"%s" % self.name
+        return u"%s (%s)" % (self.name, self.type)
 
 
 class Section(models.Model):
@@ -65,6 +65,8 @@ class Report(models.Model):
             help_text="Title for this report.")
     sections = models.ManyToManyField(Section,
             help_text="Sections conforming this report (also body).")
+    with_usage = models.BooleanField(_("With usage?"), default=False,
+            help_text="")
 
     def sections_involved(self):
         return u",".join([s.title for s in self.sections.all()])
