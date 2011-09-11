@@ -209,3 +209,5 @@ LOGGING = {
 }
 
 PID_LOCK_TIMEOUT = 3 # seconds
+
+DEFAULT_PERIOD = 10  # seconds
