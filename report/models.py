@@ -1,6 +1,8 @@
 # models
 from django.db import models
 
+from django.conf import settings
+
 # utils
 from django.utils.translation import ugettext as _
 import settings
@@ -15,15 +17,22 @@ class Variable(models.Model):
     """
     Represents a MySQL variable.
     """
-    TYPE_CHOICES = (
+    DATA_TYPE_CHOICES = (
             ('s', 'String'),
             ('n', 'Numeric'),
-            ('b', 'Boolean')
+            ('b', 'Boolean'),
+            ('a', 'Abstract'),
             )
-    name = models.CharField(_("Name"), max_length=50,
+    VARIABLE_TYPE_CHOICES = (
+            ('m', 'MySQL Variable'),
+            ('c', 'Custom Variable'),
+            )
+    name = models.CharField(_("Name"), unique=True, max_length=50,
             help_text="Variable name")
-    type = models.CharField(_("Data Type"), max_length=1,
+    data_type = models.CharField(_("Data Type"), max_length=1,
             choices=TYPE_CHOICES, help_text="Data type of the variable.")
+    type = models.CharField(_("Variable Type"), max_length=1,
+            choices=VARIABLE_TYPE_CHOICES, default='m', help_text="")
     description = models.CharField(_("Description"), max_length=200,
             blank=True, help_text="What this variable means.")
 
@@ -77,3 +86,41 @@ class Report(models.Model):
     @models.permalink
     def get_absolute_url(self, report_server_uuid):
         return ('show_report', (report_server_uuid,))
+
+    def __remove_usage_sections(self):
+        """
+        Removes all sections using the variable 'USAGE', if some.
+        """
+        try:
+            id = Variable.objects.get(name='USAGE').id
+        except Variable.DoesNotExist:
+            return
+        sections = set()
+        [sections.add(s) for s in self.sections for s.variables.filter(id=id)]
+        while(len(sections) > 0):
+            s = sections.pop()
+            s.delete()
+
+    def __add_usage_section(self):
+        """
+        Adds the usage section and the variable 'USAGE' if it not exists.
+        """
+        v = None
+        try:
+            v = Variable.objects.get(name='USAGE')
+        except Variable.DoesNotExist:
+            v = Variable(name="USAGE", data_type='a', type='m',
+                    description="Indicates to collector daemon to store "\
+                            "database usage for statistics.")
+        s = Section(name="Usage Section")
+        s.variables.add(v)
+        s.period = settings.DEFAULT_PERIOD
+
+    def save(self):
+        """
+        """
+        if not self.with_usage:
+            self.__remove_usage_sections()
+        else:
+            self.__add_usage_section()
+        super(Report, self).save()                
