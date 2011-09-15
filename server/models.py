@@ -42,6 +42,7 @@ class MySQLHandler(models.Model):
     password = models.CharField(_("Password"), max_length=100, blank=True,
             help_text="Password for this connection.")
     __conn = None
+    __tasks = {'USAGE': show_processlist,}
 
     class Meta:
         abstract = True
@@ -121,6 +122,10 @@ class MySQLHandler(models.Model):
         rs = self.doquery(sql)
         return to_list_dict(rs, ('id', 'user', 'host', 'db', 'command', 'time',
             'state', 'info'))
+        
+    def do_task(self, task):
+        f = self.__tasks.get(task, None)
+        return f() if f else f
 
 
 class Server(MySQLHandler):

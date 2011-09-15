@@ -132,9 +132,10 @@ class Worker(threading.Thread):
 
                 # check values for all variables of all reports assigned.
                 for (s, v, period) in variables:
-                    # only numeric status variables and numeric periods (period
-                    # == None means check only current values).
-                    if v.type <> 'n' or not period:
+                    # only numeric status variables or 'custom' type variables 
+                    # and numeric periods (period == None or period == 0 means 
+                    # check only current values).
+                    if v.data_type not in 'nc' or not period:
                         continue
 
                     # if t matchs a time check period of this variable, then

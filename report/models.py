@@ -117,8 +117,6 @@ class Report(models.Model):
         s.period = settings.DEFAULT_PERIOD
 
     def save(self):
-        """
-        """
         if not self.with_usage:
             self.__remove_usage_sections()
         else:
