@@ -1,5 +1,6 @@
 from django.db import models
-from report.models import Report, ReportByServer
+from report.models import Report
+from fields import UUIDField
 from django.utils.translation import ugettext as _
 import settings
 import logging
@@ -174,6 +175,18 @@ class Server(MySQLHandler):
     @models.permalink
     def get_absolute_url(self):
         return ('show_all_reports', (self.id,))
+
+
+class ReportByServer(models.Model):
+    """
+    """
+    server = models.ForeignKey(Server)
+    report = models.ForeignKey(Report)
+    uuid = UUIDField(editable=False)
+
+    def __unicode__(self):
+        return u"ReportByServer report_id=%d server_id=%d uuid=%s" % \
+                (self.report.id, self.server.id, self.uuid)
 
 
 class Database(models.Model):
