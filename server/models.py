@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def to_list_dict(rs, headers):
     """
-    Converts a resultset, given by 'rs' to a list of dictionaries, using 
+    Converts a resultset, given by 'rs' to a list of dictionaries, using
     'headers' as ordered column names.
     """
     result = []
@@ -116,7 +116,7 @@ class MySQLHandler(models.Model):
         rs = self.doquery(sql)
         return to_list_dict(rs, ('id', 'user', 'host', 'db', 'command', 'time',
             'state', 'info'))
-        
+
 
 class Server(MySQLHandler):
     """
@@ -125,16 +125,16 @@ class Server(MySQLHandler):
     active = models.BooleanField(_("Is active"), default=True)
     name = models.CharField(_("Name"), max_length=100, \
             help_text="Server name or ID.")
-    reports = models.ManyToManyField(Report, through='ReportByServer', 
+    reports = models.ManyToManyField(Report, through='ReportByServer',
             help_text="Selected reports for this server")
-                                                                                 
-    def available_reports(self): 
+
+    def available_reports(self):
         """
         Returns a comma separated list with the name of all reports assigned
         to this server.
         """
         return u",".join([r.title for r in self.reports.all()])
-                                                                                
+
     def get_variables(self):
         """
         Returns all variables associated to this server through reports and its
@@ -146,7 +146,7 @@ class Server(MySQLHandler):
                 for v in s.variables.all():
                     variables.add((s.period, v, s.period))
         return variables
-                                                                                
+
     def get_periods(self):
         """
         Determines the minimun time period for heartbeat. This period is
@@ -161,7 +161,7 @@ class Server(MySQLHandler):
             if a % b == 0:
                 return b
             return gcd(a, a % b)
-                                                                                
+
         # only variables with numeric period (period == None means chekc only
         # current values).
         periods = [v[0] for v in self.get_variables() if v[2] is not None]
@@ -170,7 +170,7 @@ class Server(MySQLHandler):
         return reduce(gcd, periods), max(periods)
 
     def __unicode__(self):
-        return u"%s [%s:%d]" % (self.name, self.ip, self.port)
+        return u"%s" % self.name
 
     @models.permalink
     def get_absolute_url(self):
@@ -193,7 +193,7 @@ class Database(models.Model):
     """
     docstring for database
     """
-    sever = models.ForeignKey(Server)
+    server = models.ForeignKey(Server)
     name = models.CharField(_("Name"), max_length=200, help_text="")
 
     def __unicode__(self):
