@@ -91,7 +91,7 @@ class Report(models.Model):
             id = Variable.objects.get(name='USAGE').id
         except Variable.DoesNotExist:
             return
-        for s in Section.objects.filter(variables__in=[id,]):
+        for s in Section.objects.filter(variables__in=[id,])
             s.delete()
 
     def __add_usage_section(self):
@@ -102,10 +102,12 @@ class Report(models.Model):
         try:
             v = Variable.objects.get(name='USAGE')
         except Variable.DoesNotExist:
-            v = Variable(name="USAGE", data_type='a', type='m',
+            v = Variable(name="USAGE", data_type='a', type='c',
                     description="Indicates to collector daemon to store "\
                             "database usage for statistics.")
-        s = Section(name="Usage Section")
+            v.save()
+        s = Section(title="Usage Section")
+        s.save()
         s.variables.add(v)
         s.period = settings.DEFAULT_PERIOD
 
