@@ -1,14 +1,8 @@
-# models
 from django.db import models
-from report.models import Report
-from fields import UUIDField
-
-# utils
+from report.models import Report, ReportByServer
 from django.utils.translation import ugettext as _
 import settings
 import logging
-
-# third party
 import MySQLdb
 
 
@@ -42,7 +36,6 @@ class MySQLHandler(models.Model):
     password = models.CharField(_("Password"), max_length=100, blank=True,
             help_text="Password for this connection.")
     __conn = None
-    __tasks = {'USAGE': show_processlist,}
 
     class Meta:
         abstract = True
@@ -123,10 +116,6 @@ class MySQLHandler(models.Model):
         return to_list_dict(rs, ('id', 'user', 'host', 'db', 'command', 'time',
             'state', 'info'))
         
-    def do_task(self, task):
-        f = self.__tasks.get(task, None)
-        return f() if f else f
-
 
 class Server(MySQLHandler):
     """
@@ -187,13 +176,12 @@ class Server(MySQLHandler):
         return ('show_all_reports', (self.id,))
 
 
-class ReportByServer(models.Model):
+class Database(models.Model):
     """
+    docstring for database
     """
-    server = models.ForeignKey(Server)
-    report = models.ForeignKey(Report)
-    uuid = UUIDField(editable=False)
+    sever = models.ForeignKey(Server)
+    name = models.CharField(_("Name"), max_length=200, help_text="")
 
     def __unicode__(self):
-        return u"ReportByServer report_id=%d server_id=%d uuid=%s" % \
-                (self.report.id, self.server.id, self.uuid)
+        return u"%s @ %s" % (self.name, self.server.name)
