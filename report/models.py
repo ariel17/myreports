@@ -1,12 +1,8 @@
-# models
 from django.db import models
-
 from django.conf import settings
-
-# utils
+from fields import UUIDField
 from django.utils.translation import ugettext as _
 import settings
-
 import logging
 
 
@@ -25,7 +21,8 @@ class Variable(models.Model):
             )
     VARIABLE_TYPE_CHOICES = (
             ('m', 'MySQL Variable'),
-            ('c', 'Custom Variable'),
+            ('c', 'Variable as Command'),
+            ('u', 'Variable for Usage'),
             )
     name = models.CharField(_("Name"), unique=True, max_length=50,
             help_text="Variable name")
@@ -122,3 +119,15 @@ class Report(models.Model):
         else:
             self.__add_usage_section()
         super(Report, self).save()                
+
+
+class ReportByServer(models.Model):
+    """
+    """
+    server = models.ForeignKey(Server)
+    report = models.ForeignKey(Report)
+    uuid = UUIDField(editable=False)
+
+    def __unicode__(self):
+        return u"ReportByServer report_id=%d server_id=%d uuid=%s" % \
+                (self.report.id, self.server.id, self.uuid)
