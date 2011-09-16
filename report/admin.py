@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 
 from models import Report, Section, Variable
@@ -8,7 +9,7 @@ class ReportAdmin(admin.ModelAdmin):
     list_filter = ("server", "sections",)
     ordering = ("title",)
 
-
+    
 class SectionAdmin(admin.ModelAdmin):
     list_display = ("title", "variables_involved",)
     list_filter = ("variables",)

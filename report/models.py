@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.signals import pre_save
 from django.conf import settings
 from django.utils.translation import ugettext as _
 import settings
@@ -83,7 +84,8 @@ class Report(models.Model):
     def get_absolute_url(self, report_server_uuid):
         return ('show_report', (report_server_uuid,))
 
-    def __remove_usage_sections(self):
+    @staticmethod
+    def remove_usage_sections(report, *args, **kwargs):
         """
         Removes all sections using the variable 'USAGE', if some.
         """
@@ -91,10 +93,12 @@ class Report(models.Model):
             id = Variable.objects.get(name='USAGE').id
         except Variable.DoesNotExist:
             return
-        for s in Section.objects.filter(variables__in=[id,])
-            s.delete()
+        for s in Section.objects.filter(variables__in=[id,]):
+            if s in report.sections.all():
+                report.sections.remove(s)
 
-    def __add_usage_section(self):
+    @staticmethod
+    def add_usage_section(report, *args, **kwargs):
         """
         Adds the usage section and the variable 'USAGE' if it not exists.
         """
@@ -106,14 +110,24 @@ class Report(models.Model):
                     description="Indicates to collector daemon to store "\
                             "database usage for statistics.")
             v.save()
-        s = Section(title="Usage Section")
-        s.save()
-        s.variables.add(v)
-        s.period = settings.DEFAULT_PERIOD
-
-    def save(self):
-        if not self.with_usage:
-            self.__remove_usage_sections()
+        try:
+            s = Section.objects.get(variables__in=[v.id,])
+        except Section.DoesNotExist:
+            s = Section(title="Usage Section", period=settings.DEFAULT_PERIOD)
+            s.save()
+            s.variables.add(v)
+            s.save()
+        report.sections.add(s)
+                                                                                
+    @staticmethod
+    def check_usage_section(sender, *args, **kwargs):
+        obj = kwargs['instance']
+        print obj
+        logger.debug("Hola")
+        if not obj.with_usage:
+            Report.remove_usage_sections(obj)
         else:
-            self.__add_usage_section()
-        super(Report, self).save()                
+            Report.add_usage_section(obj)
+
+
+pre_save.connect(Report.check_usage_section, sender=Report)
