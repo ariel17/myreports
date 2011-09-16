@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from fields import UUIDField
 from django.utils.translation import ugettext as _
 import settings
 import logging
@@ -27,7 +26,7 @@ class Variable(models.Model):
     name = models.CharField(_("Name"), unique=True, max_length=50,
             help_text="Variable name")
     data_type = models.CharField(_("Data Type"), max_length=1,
-            choices=TYPE_CHOICES, help_text="Data type of the variable.")
+            choices=DATA_TYPE_CHOICES, help_text="Data type of the variable.")
     type = models.CharField(_("Variable Type"), max_length=1,
             choices=VARIABLE_TYPE_CHOICES, default='m', help_text="")
     description = models.CharField(_("Description"), max_length=200,
@@ -92,10 +91,7 @@ class Report(models.Model):
             id = Variable.objects.get(name='USAGE').id
         except Variable.DoesNotExist:
             return
-        sections = set()
-        [sections.add(s) for s in self.sections for s.variables.filter(id=id)]
-        while(len(sections) > 0):
-            s = sections.pop()
+        for s in Section.objects.filter(variables__in=[id,]):
             s.delete()
 
     def __add_usage_section(self):
@@ -119,15 +115,3 @@ class Report(models.Model):
         else:
             self.__add_usage_section()
         super(Report, self).save()                
-
-
-class ReportByServer(models.Model):
-    """
-    """
-    server = models.ForeignKey(Server)
-    report = models.ForeignKey(Report)
-    uuid = UUIDField(editable=False)
-
-    def __unicode__(self):
-        return u"ReportByServer report_id=%d server_id=%d uuid=%s" % \
-                (self.report.id, self.server.id, self.uuid)
