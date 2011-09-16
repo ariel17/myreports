@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models.signals import pre_save
 from django.conf import settings
 from django.utils.translation import ugettext as _
 import settings
@@ -71,8 +70,6 @@ class Report(models.Model):
             help_text="Title for this report.")
     sections = models.ManyToManyField(Section,
             help_text="Sections conforming this report (also body).")
-    with_usage = models.BooleanField(_("With usage?"), default=False,
-            help_text="")
 
     def sections_involved(self):
         return u",".join([s.title for s in self.sections.all()])
@@ -83,51 +80,3 @@ class Report(models.Model):
     @models.permalink
     def get_absolute_url(self, report_server_uuid):
         return ('show_report', (report_server_uuid,))
-
-    @staticmethod
-    def remove_usage_sections(report, *args, **kwargs):
-        """
-        Removes all sections using the variable 'USAGE', if some.
-        """
-        try:
-            id = Variable.objects.get(name='USAGE').id
-        except Variable.DoesNotExist:
-            return
-        for s in Section.objects.filter(variables__in=[id,]):
-            if s in report.sections.all():
-                report.sections.remove(s)
-
-    @staticmethod
-    def add_usage_section(report, *args, **kwargs):
-        """
-        Adds the usage section and the variable 'USAGE' if it not exists.
-        """
-        v = None
-        try:
-            v = Variable.objects.get(name='USAGE')
-        except Variable.DoesNotExist:
-            v = Variable(name="USAGE", data_type='a', type='c',
-                    description="Indicates to collector daemon to store "\
-                            "database usage for statistics.")
-            v.save()
-        try:
-            s = Section.objects.get(variables__in=[v.id,])
-        except Section.DoesNotExist:
-            s = Section(title="Usage Section", period=settings.DEFAULT_PERIOD)
-            s.save()
-            s.variables.add(v)
-            s.save()
-        report.sections.add(s)
-                                                                                
-    @staticmethod
-    def check_usage_section(sender, *args, **kwargs):
-        obj = kwargs['instance']
-        print obj
-        logger.debug("Hola")
-        if not obj.with_usage:
-            Report.remove_usage_sections(obj)
-        else:
-            Report.add_usage_section(obj)
-
-
-pre_save.connect(Report.check_usage_section, sender=Report)
