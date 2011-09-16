@@ -8,9 +8,10 @@
 
 
 from django.db import models
-from server.models import Server
+from server.models import Server, Database
 from report.models import Variable
 from datetime import date
+from django.utils.translation import ugettext as _
 import logging
 
 
@@ -153,7 +154,8 @@ class UsageSnapshot(Snapshot):
 class SnapshotFactory(object):
     """
     """
-    @take_snapshot(cls, server, must_save=True, **kwargs):
+    @classmethod
+    def take_snapshot(cls, server, must_save=True, **kwargs):
         for c in Snapshot.__subclasses__():
             if c.is_snapshot_for(kwargs['variable']):
                 return c.take_snapshot(server, must_save, **kwargs)
