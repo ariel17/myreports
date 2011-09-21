@@ -70,7 +70,7 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
-from history.models import Snapshot
+from history.models import VariableSnapshot, UsageSnapshot, SnapshotFactory
 from optparse import make_option
 
 import daemon
@@ -131,18 +131,18 @@ class Worker(threading.Thread):
                 t = int(floor(time() - base_time))
 
                 # check values for all variables of all reports assigned.
-                for (s, v, period) in variables:
+                for (period, v) in variables:
                     # only numeric status variables or 'custom' type variables 
                     # and numeric periods (period == None or period == 0 means 
                     # check only current values).
-                    if v.data_type not in 'nc' or not period:
+                    if v.data_type not in 'na' or not period:
                         continue
 
                     # if t matchs a time check period of this variable, then
                     # do a snapshot.
-                    if t % s == 0:
-                        s = Snapshot.take_snapshot(self.server, v)
-                        logger.debug("Taked snapshot: %s." % s)
+                    if t % period == 0:
+                        s = SnapshotFactory.take_snapshot(self.server, variable=v)
+                        logger.debug("Taked snapshot: %s" % s)
                 
                 # if t has reached max_period (time when all variables has 
                 # been checked at least once), then base_time moves into

@@ -66,7 +66,7 @@ class VariableSnapshot(Snapshot):
     def is_snapshot_for(cls, variable):
         """
         """
-        return variable.data_type != 'c'
+        return variable.type != 'c'
 
     @classmethod
     def take_snapshot(cls, server, must_save=True, **kwargs):
@@ -122,23 +122,26 @@ class UsageSnapshot(Snapshot):
                 self.qid, self.duration, self.time)
 
     @classmethod
-    def take_snaptshot(cls, server, must_save=True, **kwargs):
+    def take_snapshot(cls, server, must_save=True, **kwargs):
         """
         """
         result = []
         for u in server.show_processlist():
+            if not u['db']:
+                continue
+            logger.debug("Usage: %s" % repr(u))
             qid, duration = int(u['id']), int(u['time'])
             try:
                 db = Database.objects.get(server__id=server.id, name=u['db'])
             except Database.DoesNotExist:
-                db = Database(server=server, name=d['db'])
+                db = Database(server=server, name=u['db'])
                 if must_save:
                     db.save()
             try:
                 s = cls.objects.get(database__id=db.id, qid=qid,
                         duration__gte=duration, time__gte=date.today())
             except cls.DoesNotExist:
-                s = cls(server=server, database=db, qid=qid, duration=duration)
+                s = cls(database=db, qid=qid, duration=duration)
                 if must_save:
                     s.save()
             result.append(s)
@@ -148,7 +151,7 @@ class UsageSnapshot(Snapshot):
     def is_snapshot_for(cls, variable):
         """
         """
-        return variable.data_type == 'c' and variable.name == 'USAGE'
+        return variable.type == 'c' and variable.name == 'USAGE'
 
 
 class SnapshotFactory(object):

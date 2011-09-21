@@ -21,7 +21,6 @@ class Variable(models.Model):
     VARIABLE_TYPE_CHOICES = (
             ('m', 'MySQL Variable'),
             ('c', 'Variable as Command'),
-            ('u', 'Variable for Usage'),
             )
     name = models.CharField(_("Name"), unique=True, max_length=50,
             help_text="Variable name")
@@ -33,7 +32,7 @@ class Variable(models.Model):
             blank=True, help_text="What this variable means.")
 
     def __unicode__(self):
-        return u"%s (%s)" % (self.name, self.type)
+        return u"%s (dt=%s, t=%s)" % (self.name, self.data_type, self.type)
 
 
 class Section(models.Model):

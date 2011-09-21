@@ -144,7 +144,7 @@ class Server(MySQLHandler):
         for r in self.reports.all():
             for s in r.sections.all():
                 for v in s.variables.all():
-                    variables.add((s.period, v, s.period))
+                    variables.add((s.period, v,))
         return variables
 
     def get_periods(self):
@@ -156,7 +156,7 @@ class Server(MySQLHandler):
         def gcd(a, b):
             """
             """
-            if b == 0:
+            if not b:
                 return 0
             if a % b == 0:
                 return b
@@ -164,7 +164,7 @@ class Server(MySQLHandler):
 
         # only variables with numeric period (period == None means chekc only
         # current values).
-        periods = [v[0] for v in self.get_variables() if v[2] is not None]
+        periods = [v[0] for v in self.get_variables() if v[0]]
         # based on http://code.activestate.com/recipes/577282-finding-the-
         #   gcd-of-a-list-of-numbers-aka-reducing-/
         return reduce(gcd, periods), max(periods)
