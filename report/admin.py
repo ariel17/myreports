@@ -17,9 +17,9 @@ class SectionAdmin(admin.ModelAdmin):
 
 
 class VariableAdmin(admin.ModelAdmin):
-    list_display = ("name", "type", "description",)
-    list_filter = ("type",)
-    ordering = ("name", "type",)
+    list_display = ("name", "type", "data_type", "description",)
+    list_filter = ("type", "data_type")
+    ordering = ("name", "type", "data_type")
 
 
 admin.site.register(Report, ReportAdmin)
