@@ -1,12 +1,20 @@
 from django.contrib import admin
-
 from models import Server, ReportByServer, Database
+
+
+class ReportByServerInline(admin.TabularInline):
+    model = ReportByServer
+
+
+class DatabaseInline(admin.TabularInline):
+    model = Database
 
 
 class ServerAdmin(admin.ModelAdmin):
     list_display = ("name", "active", "ip", "port", "available_reports")
     list_filter = ("port", "active")
     ordering = ("name", "ip", "active")
+    inlines = [DatabaseInline, ReportByServerInline, ]
 
 
 class ReportByServerAdmin(admin.ModelAdmin):
