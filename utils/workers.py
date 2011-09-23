@@ -31,7 +31,7 @@ class Worker(threading.Thread):
         self.running = False
 
 
-class ServerWorker(threading.Thread):
+class ServerWorker(Worker):
     """
     This class wraps the Server class model with threading functionallity.
     """
@@ -39,7 +39,7 @@ class ServerWorker(threading.Thread):
     server = None
 
     def __init__(self, id, server):
-        super(Worker, self).__init__(id)
+        super(ServerWorker, self).__init__(id)
         self.server = server
         logger.info("Handling server %s" % server)
 
@@ -98,7 +98,7 @@ class ServerWorker(threading.Thread):
             self.server.close()
 
 
-class SocketWorker(object):
+class SocketWorker(Worker):
     """
     This is a theaded socket server to handle external request for making
     queries.
@@ -109,7 +109,7 @@ class SocketWorker(object):
     sock = None
     servers = None
 
-    def __init__(self, id, servers, host="0.0.0.0", port=9000):
+    def __init__(self, id, servers, host, port):
         super(SocketWorker, self).__init__(id)
         self.host = host
         self.port = port
@@ -120,7 +120,6 @@ class SocketWorker(object):
         """
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setblocking(0)  # Non-blocking socket
         self.sock.bind((self.host, self.port))
         self.sock.listen(settings.COLLECTOR_MAX_WAITING)                 
 
@@ -145,11 +144,14 @@ class SocketWorker(object):
 
     def run(self):
         self.__serve()
+        logger.debug("Now the socket is listening.")
         inputs = [self.sock, ]
 
+        logger.debug("Starting the reactor.")
         while self.running:
             try:
-                ready_in, ready_out, ready_err = select.select(inputs, [], [])
+                ready_in, ready_out, ready_err = select.select(inputs, [], [],
+                        settings.COLLECTOR_REACTOR_TIME)
             except select.error, e:
                 logger.exception("There was an error executing 'select' "\
                         "statement:")
@@ -157,7 +159,8 @@ class SocketWorker(object):
                 logger.exception("There was an error with socket:")
 
             for r in ready_in:
-                if r == s:
+                logger.debug("Socket has changes: %s" % str(r))
+                if r == self.sock:
                    # handle a new connection
                     client, address = s.accept()
                     logger.info("Connection %d accepted from %s." %
@@ -172,7 +175,9 @@ class SocketWorker(object):
                                 "is not integer:")
                         continue
                     if len(body_length) == 0:
+                        r.close()
                         inputs.remove(r)
+                        logger.debug("Closed connection and removed client.")
                         continue
                     message = Message(self.__recv(body_length))
                     method, param = message.to_parts()
