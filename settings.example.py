@@ -197,6 +197,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'utils.workers': {
+            'handlers': ['daemon', 'mail_admins', ],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
         'myreports.server.views': {
             'handlers': ['mail_admins', 'console' ],
             'level': 'DEBUG',
