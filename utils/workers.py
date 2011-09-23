@@ -130,10 +130,22 @@ class SocketWorker(Worker):
         while len(msg) < length:
             chunk = sock.recv(length-len(msg))
             if chunk == '':
-                raise RuntimeError("socket connection broken")
+                logger.warning("Connection was broken wen receiving message.")
+                return chunk
             msg = msg + chunk
         logger.debug("Raw message received: '%s' (%d)" % (msg, len(msg)))
         return msg
+
+    def __accept(self, sock, inputs=None):
+        """
+        """
+        # handle a new connection
+        client, address = sock.accept()
+        logger.info("Connection %d accepted from %s." % (client.fileno(),
+            address))
+        if inputs:
+            inputs.append(client)
+        return (client, address)
 
     def __do_query(self, server_id, method, param):
         """
@@ -141,6 +153,34 @@ class SocketWorker(Worker):
         for s in self.servers:
             if s.id == server_id:
                 return getattr(s, method)(param)
+
+    def __recv_message(self, sock):
+        # handle a request from an already connected client
+        body_length = self.__recv(sock, self.HEAD_LENGTH)
+        try:
+            length = int(body_length)
+        except ValueError:
+            logger.warning("The value of body lengh received "\
+                    "is not integer: %s" % repr(body_length))
+            length = 0
+                                                                    
+        if length == 0:
+            logger.warning("Connection was lost while receiving message "\
+                    "header.")
+            return None
+                                                                    
+        body = self.__recv(sock, length)
+
+        if len(body) == 0:
+            logger.warning("Connection was lost while receiving message body.")
+            return None
+
+        if len(body) <> length:
+            logger.warning("Body length is diferent from indicated in header."\
+                    " This message will be descarted.")
+            return None
+        
+        return Message(body)
 
     def run(self):
         self.__serve()
@@ -159,31 +199,17 @@ class SocketWorker(Worker):
                 logger.exception("There was an error with socket:")
 
             for r in ready_in:
-                logger.debug("Socket has changes: %s" % str(r))
+                logger.debug("Socket has changes: %d" % r.fileno())
                 if r == self.sock:
-                   # handle a new connection
-                    client, address = s.accept()
-                    logger.info("Connection %d accepted from %s." %
-                            (client.fileno(), address))
-                    inputs.append(client)
+                    self.__accept(sock, inputs)  # accepts a new client
                 else:
                     # handle a request from an already connected client
-                    try:
-                        body_length = self.__recv(r, self.HEAD_LENGTH)
-                    except ValueError:
-                        logger.exception("The value of body lengh received "\
-                                "is not integer:")
-                        continue
-                    if len(body_length) == 0:
-                        r.close()
-                        inputs.remove(r)
-                        logger.debug("Closed connection and removed client.")
-                        continue
-                    message = Message(self.__recv(body_length))
+                    message = self.__recv_message(r)
                     method, param = message.to_parts()
-                    response = Message(str(self.__do_query(method, param)))
-                    r.send(str(response))
+                    result = self.__do_query(method, param)
+                    message = Message(repr(result))
+                    r.send(str(message))
             
-            # time to go: closing all input sockets still open
-            for i in inputs:
-                i.close()
+        # time to go: closing all input sockets still open
+        for i in inputs:
+            i.close()
