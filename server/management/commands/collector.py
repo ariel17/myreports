@@ -70,95 +70,18 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
-from history.models import VariableSnapshot, UsageSnapshot, SnapshotFactory
 from optparse import make_option
-
 import daemon
 from lockfile import FileLock, LockTimeout
-import threading
 from sys import exit
 import signal
-from time import sleep, time
 import logging
-from math import floor
+from utils.workers import ServerWorker, SocketWorker
+
 
 logger = logging.getLogger(__name__)
 
 SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_ERROR = range(3)
-
-
-class Worker(threading.Thread):
-    """
-    This class wraps the Server class model with threading functionallity.
-    """
-
-    server = None
-    running = True
-
-    def __init__(self, id, server):
-        super(Worker, self).__init__(name="Worker#%d" % id)
-        self.server = server
-        logger.info("Initialized thread. Handling server %s" % server)
-
-    def stop(self):
-        """
-        Sets the flag 'running' to False. This breaks the thread loop.
-        """
-        self.running = False
-
-    def restart(self):
-        self.server.restart()
-
-    def run(self):
-        logger.debug("Core initialized.")
-        try:
-            logger.debug("Connecting to server.")
-            self.server.connect()
-
-            # this is the minimal time period between checks (heartbeat)
-            min_period, max_period = self.server.get_periods()
-            logger.debug("Heartbeat period: %d seconds." % min_period)
-
-            variables = self.server.get_variables()
-            logger.debug("Variables to check: %s" % variables)
-
-            base_time = time()
-            while self.running:
-                logger.debug("Sleeping %d seconds." % min_period)
-                sleep(min_period)
-
-                # getting actual seconds passed since thread start as int
-                t = int(floor(time() - base_time))
-
-                # check values for all variables of all reports assigned.
-                for (period, v) in variables:
-                    # only numeric status variables or 'custom' type variables 
-                    # and numeric periods (period == None or period == 0 means 
-                    # check only current values).
-                    if v.data_type not in 'na' or not period:
-                        continue
-
-                    # if t matchs a time check period of this variable, then
-                    # do a snapshot.
-                    if t % period == 0:
-                        s = SnapshotFactory.take_snapshot(self.server, variable=v)
-                        logger.debug("Taked snapshot: %s" % s)
-                
-                # if t has reached max_period (time when all variables has 
-                # been checked at least once), then base_time moves into
-                # now.
-                if t >= max_period:
-                    base_time = time()
-                    logger.debug("Reseted base time to now.")
-
-        except Exception:
-            logger.exception("Error occoured when contacting server:")
-        finally:
-            logger.info("Finishing thread.")
-
-    def __del__(self):
-        if self.server:
-            self.server.close()
 
 
 class Command(BaseCommand):
@@ -335,7 +258,8 @@ class Command(BaseCommand):
                 "running?).")
             exit(ALREADY_RUNNING_ERROR)
         try:
-            self.context.pidfile.acquire(timeout=settings.PID_LOCK_TIMEOUT)
+            self.context.pidfile.acquire(
+                    timeout=settings.COLLECTOR_PIDLOCK_TIMEOUT)
         except LockTimeout:
             self.context.pidfile.release()
             logger.exception("Can't lock PID file:")
@@ -347,7 +271,7 @@ class Command(BaseCommand):
 
         logger.info("Starting threads.")
         for i in range(len(servers)):
-            w = Worker(i, servers[i])
+            w = ServerWorker(i, servers[i])
             w.start()
             self.workers.append(w)
 
