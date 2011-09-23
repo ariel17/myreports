@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from utils.fields import UUIDField
 from django.utils.translation import ugettext as _
 import settings
 import logging
@@ -35,15 +36,30 @@ class Variable(models.Model):
         return u"%s (dt=%s, t=%s)" % (self.name, self.data_type, self.type)
 
 
-class Section(models.Model):
+class WithText(models.Model):
+    """
+    An absctract class for positionable elements, such reports or sections.
+    """
+    title = models.CharField(_("Title"), max_length=100,
+            help_text="Title for this element.")
+    subtitle = models.CharField(_("Subtitle"), blank=True, null=True,
+            max_length=200, help_text="Subtitle for this element.")
+
+    class Meta:
+        abstract = True
+
+
+class Section(WithText):
     """
     Section agroups many related variables to conform a chart or showing
     current values.
     """
-    title = models.CharField(_("Title"), max_length=200,
-            help_text="Title for this section of a report.")
     variables = models.ManyToManyField(Variable, help_text="Wich variables "\
             "are included to generate this report section.")
+    order = models.PositiveIntegerField(_("Order"), default=0, blank=True,
+            null=True, help_text="Indicates the final position when "\
+                    "presenting the information to the user. If this value "\
+                    "is 0 or NULL, the order will not be garatized.")
     period = models.PositiveIntegerField(null=True, blank=True, default=None,
             help_text="How many seconds will perform an active check to "\
                     "generate historic content. If it is 0 or not setted, "\
@@ -60,14 +76,12 @@ class Section(models.Model):
         return ('show_section', (report_server_uuid, self.id,))
 
 
-class Report(models.Model):
+class Report(WithText):
     """
     This is a full-report model. Contains a Title and all sections conforming a
     general panorama.
     """
-    title = models.CharField(_("Report title"), max_length=200,
-            help_text="Title for this report.")
-    sections = models.ManyToManyField(Section,
+    sections = models.ManyToManyField(Section, through='SectionByReport',
             help_text="Sections conforming this report (also body).")
 
     def sections_involved(self):
@@ -79,3 +93,20 @@ class Report(models.Model):
     @models.permalink
     def get_absolute_url(self, report_server_uuid):
         return ('show_report', (report_server_uuid,))
+
+
+class SectionByReport(models.Model):
+    """
+    """
+    section = models.ForeignKey(Section)
+    report = models.ForeignKey(Report)
+    order = models.PositiveIntegerField(_("Order"), default=0, blank=True,
+            null=True, help_text="Indicates the final position when "\
+                    "presenting the information to the user. If this value "\
+                    "is 0 or NULL, the order will not be garatized.")
+    uuid = UUIDField(editable=False)
+
+    def __unicode__(self):
+        return u"SectionByReport report_id=%d section_id=%d order=%d "\
+                "uuid=%s" % (self.report.id, self.section.id, self.order,
+                        self.uuid)

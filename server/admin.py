@@ -18,7 +18,7 @@ class ServerAdmin(admin.ModelAdmin):
 
 
 class ReportByServerAdmin(admin.ModelAdmin):
-    list_display = ("server", "report", "uuid")
+    list_display = ("server", "report", "order", "uuid")
 
 
 class DatabaseAdmin(admin.ModelAdmin):

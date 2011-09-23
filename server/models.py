@@ -1,6 +1,6 @@
 from django.db import models
 from report.models import Report
-from fields import UUIDField
+from utils.fields import UUIDField
 from django.utils.translation import ugettext as _
 import settings
 import logging
@@ -182,11 +182,15 @@ class ReportByServer(models.Model):
     """
     server = models.ForeignKey(Server)
     report = models.ForeignKey(Report)
+    order = models.PositiveIntegerField(_("Order"), default=0, blank=True,
+            null=True, help_text="Indicates the final position when "\
+                    "presenting the information to the user. If this value "\
+                    "is 0 or NULL, the order will not be garatized.")
     uuid = UUIDField(editable=False)
 
     def __unicode__(self):
-        return u"ReportByServer report_id=%d server_id=%d uuid=%s" % \
-                (self.report.id, self.server.id, self.uuid)
+        return u"ReportByServer report_id=%d server_id=%d order=%d uuid=%s" % \
+                (self.report.id, self.server.id, self.order, self.uuid)
 
 
 class Database(models.Model):
