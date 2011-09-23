@@ -6,6 +6,7 @@ from time import sleep, time
 import logging
 from math import floor
 from protocol import Message
+from socket_tools import serve, recv_inc
 import socket
 import select
 
@@ -116,26 +117,6 @@ class SocketWorker(Worker):
         self.servers = servers
         logger.info("Handling request in %s:%d" % (host, port))
 
-    def __serve(self):
-        """
-        """
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind((self.host, self.port))
-        self.sock.listen(settings.COLLECTOR_MAX_WAITING)                 
-
-    def __recv(self, sock, length):
-        """
-        """
-        msg = ''
-        while len(msg) < length:
-            chunk = sock.recv(length-len(msg))
-            if chunk == '':
-                logger.warning("Connection was broken wen receiving message.")
-                return chunk
-            msg = msg + chunk
-        logger.debug("Raw message received: '%s' (%d)" % (msg, len(msg)))
-        return msg
-
     def __accept(self, sock, inputs=None):
         """
         """
@@ -156,7 +137,7 @@ class SocketWorker(Worker):
 
     def __recv_message(self, sock):
         # handle a request from an already connected client
-        body_length = self.__recv(sock, Message.HEAD_LENGTH)
+        body_length = recv_inc(sock, Message.HEAD_LENGTH)
         try:
             length = int(body_length)
         except ValueError:
@@ -169,7 +150,7 @@ class SocketWorker(Worker):
                     "header.")
             return None
                                                                     
-        body = self.__recv(sock, length)
+        body = recv_inc(sock, length)
 
         if len(body) == 0:
             logger.warning("Connection was lost while receiving message body.")
@@ -183,7 +164,7 @@ class SocketWorker(Worker):
         return Message(body)
 
     def run(self):
-        self.__serve()
+        serve(self.sock, self.host, self.port, settings.COLLECTOR_MAX_WAITING)
         logger.debug("Now the socket is listening.")
         inputs = [self.sock, ]
 
