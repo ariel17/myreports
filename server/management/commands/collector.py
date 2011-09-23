@@ -275,6 +275,10 @@ class Command(BaseCommand):
             w.start()
             self.workers.append(w)
 
+        w = SocketWorker(id=9999, servers=servers, host="127.0.0.1", port=9000)
+        w.start()
+        self.workers.append(w)
+
         logger.debug("Waiting for threads to terminate.")
         for w in self.workers:
             w.join()
