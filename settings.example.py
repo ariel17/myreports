@@ -210,6 +210,10 @@ LOGGING = {
     },
 }
 
-PID_LOCK_TIMEOUT = 3 # seconds
+COLLECTOR_PIDLOCK_TIMEOUT = 3 # seconds
 
-DEFAULT_PERIOD = 10  # seconds
+COLLECTOR_DEFAULT_PERIOD = 10  # seconds
+
+COLLECTOR_MAX_WAITING = 20  # clients
+
+COLLECTOR_REACTOR_TIME = 2  # seconds
