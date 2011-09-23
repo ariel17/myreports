@@ -156,7 +156,7 @@ class SocketWorker(Worker):
 
     def __recv_message(self, sock):
         # handle a request from an already connected client
-        body_length = self.__recv(sock, self.HEAD_LENGTH)
+        body_length = self.__recv(sock, Message.HEAD_LENGTH)
         try:
             length = int(body_length)
         except ValueError:
@@ -201,14 +201,19 @@ class SocketWorker(Worker):
             for r in ready_in:
                 logger.debug("Socket has changes: %d" % r.fileno())
                 if r == self.sock:
-                    self.__accept(sock, inputs)  # accepts a new client
+                    self.__accept(self.sock, inputs)  # accepts a new client
                 else:
                     # handle a request from an already connected client
                     message = self.__recv_message(r)
-                    method, param = message.to_parts()
-                    result = self.__do_query(method, param)
+                    if not message:
+                        r.close()
+                        inputs.remove(r)
+                        logger.info("Removed client from list.")
+                        continue
+                    server_id, method, param = message.to_parts()
+                    result = self.__do_query(int(server_id), method, param)
                     message = Message(repr(result))
-                    r.send(str(message))
+                    r.send("%s" % str(message))
             
         # time to go: closing all input sockets still open
         for i in inputs:
