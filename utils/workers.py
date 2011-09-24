@@ -30,6 +30,9 @@ class Worker(threading.Thread):
         Sets the flag 'running' to False. This breaks the thread loop.
         """
         self.running = False
+        
+    def run(self):
+        raise NotImplementedError("Must implement this method.")
 
 
 class ServerWorker(Worker):
@@ -79,7 +82,8 @@ class ServerWorker(Worker):
                     # if t matchs a time check period of this variable, then
                     # do a snapshot.
                     if t % period == 0:
-                        s = SnapshotFactory.take_snapshot(self.server, variable=v)
+                        s = SnapshotFactory.take_snapshot(self.server,
+                                variable=v)
                         logger.debug("Taked snapshot: %s" % s)
                 
                 # if t has reached max_period (time when all variables has 
@@ -99,69 +103,29 @@ class ServerWorker(Worker):
             self.server.close()
 
 
-class SocketWorker(Worker):
+class SocketWorker(Worker, SocketServer):
     """
     This is a theaded socket server to handle external request for making
     queries.
     """
-
-    host = None
-    port = None
-    sock = None
     servers = None
 
     def __init__(self, id, servers, host, port):
         super(SocketWorker, self).__init__(id)
-        self.host = host
-        self.port = port
-        self.servers = servers
-        logger.info("Handling request in %s:%d" % (host, port))
+        self.servers = self.__servers_to_dict(servers)
 
-    def __accept(self, sock, inputs=None):
+    def __servers_to_dict(self, servers_list):
         """
         """
-        # handle a new connection
-        client, address = sock.accept()
-        logger.info("Connection %d accepted from %s." % (client.fileno(),
-            address))
-        if inputs:
-            inputs.append(client)
-        return (client, address)
+        d = {}
+        for s in servers_list:
+            d[s.id] = s
+        return d
 
     def __do_query(self, server_id, method, param):
         """
         """
-        for s in self.servers:
-            if s.id == server_id:
-                return getattr(s, method)(param)
-
-    def __recv_message(self, sock):
-        # handle a request from an already connected client
-        body_length = recv_inc(sock, Message.HEAD_LENGTH)
-        try:
-            length = int(body_length)
-        except ValueError:
-            logger.warning("The value of body lengh received "\
-                    "is not integer: %s" % repr(body_length))
-            length = 0
-                                                                    
-        if length == 0:
-            logger.warning("Connection was lost while receiving message "\
-                    "header.")
-            return None
-                                                                    
-        body = recv_inc(sock, length)
-
-        if len(body) == 0:
-            logger.warning("Connection was lost while receiving message body.")
-            return None
-
-        if len(body) <> length:
-            logger.warning("Body length is diferent from indicated in header."\
-                    " This message will be descarted.")
-            return None
-        
-        return Message(body)
+        return getattr(self.servers[server_id], method)(param)
 
     def run(self):
         serve(self.sock, self.host, self.port, settings.COLLECTOR_MAX_WAITING)
