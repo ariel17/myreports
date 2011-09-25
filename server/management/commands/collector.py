@@ -76,7 +76,7 @@ from lockfile import FileLock, LockTimeout
 from sys import exit
 import signal
 import logging
-from utils.workers import ServerWorker, SocketWorker
+from utils.workers import ServerWorker, QueryWorker
 
 
 logger = logging.getLogger(__name__)
@@ -276,7 +276,7 @@ class Command(BaseCommand):
             self.workers.append(w)
 
         # TODO: must pass host and port as parameters
-        w = SocketWorker(id=9999, servers=servers, host="127.0.0.1", port=9000)
+        w = QueryWorker(id=9999, servers=servers, host="127.0.0.1", port=9000)
         w.start()
         self.workers.append(w)
 

@@ -5,8 +5,7 @@ import threading
 from time import sleep, time
 import logging
 from math import floor
-from protocol import Message
-from socket_tools import serve, recv_inc
+from protocol import Message, MalformedMessageException, SocketServer
 import socket
 import select
 
@@ -30,7 +29,7 @@ class Worker(threading.Thread):
         Sets the flag 'running' to False. This breaks the thread loop.
         """
         self.running = False
-        
+
     def run(self):
         raise NotImplementedError("Must implement this method.")
 
@@ -73,8 +72,8 @@ class ServerWorker(Worker):
 
                 # check values for all variables of all reports assigned.
                 for (period, v) in variables:
-                    # only numeric status variables or 'custom' type variables 
-                    # and numeric periods (period == None or period == 0 means 
+                    # only numeric status variables or 'custom' type variables
+                    # and numeric periods (period == None or period == 0 means
                     # check only current values).
                     if v.data_type not in 'na' or not period:
                         continue
@@ -85,8 +84,8 @@ class ServerWorker(Worker):
                         s = SnapshotFactory.take_snapshot(self.server,
                                 variable=v)
                         logger.debug("Taked snapshot: %s" % s)
-                
-                # if t has reached max_period (time when all variables has 
+
+                # if t has reached max_period (time when all variables has
                 # been checked at least once), then base_time moves into
                 # now.
                 if t >= max_period:
@@ -103,19 +102,22 @@ class ServerWorker(Worker):
             self.server.close()
 
 
-class SocketWorker(Worker, SocketServer):
+class QueryWorker(Worker):
     """
-    This is a theaded socket server to handle external request for making
-    queries.
+    This is a worker to handle query request through a binded socket.
     """
     servers = None
+    sock = None
 
     def __init__(self, id, servers, host, port):
-        super(SocketWorker, self).__init__(id)
+        super(QueryWorker, self).__init__(id)
         self.servers = self.__servers_to_dict(servers)
+        self.sock = SocketServer(host, port, settings.COLLECTOR_MAX_WAITING)
 
     def __servers_to_dict(self, servers_list):
         """
+        Receives a list of Server objects and returns a dict with the same
+        objects indexed by id.
         """
         d = {}
         for s in servers_list:
@@ -124,42 +126,28 @@ class SocketWorker(Worker, SocketServer):
 
     def __do_query(self, server_id, method, param):
         """
+        Receives a Server id, a method and a param and returns the called
+        method with the parameter made to the correct object.
         """
         return getattr(self.servers[server_id], method)(param)
 
     def run(self):
-        serve(self.sock, self.host, self.port, settings.COLLECTOR_MAX_WAITING)
-        logger.debug("Now the socket is listening.")
-        inputs = [self.sock, ]
-
-        logger.debug("Starting the reactor.")
         while self.running:
-            try:
-                ready_in, ready_out, ready_err = select.select(inputs, [], [],
-                        settings.COLLECTOR_REACTOR_TIME)
-            except select.error, e:
-                logger.exception("There was an error executing 'select' "\
-                        "statement:")
-            except socket.error, e:
-                logger.exception("There was an error with socket:")
 
-            for r in ready_in:
-                logger.debug("Socket has changes: %d" % r.fileno())
-                if r == self.sock:
-                    self.__accept(self.sock, inputs)  # accepts a new client
-                else:
-                    # handle a request from an already connected client
-                    message = self.__recv_message(r)
-                    if not message:
-                        r.close()
-                        inputs.remove(r)
-                        logger.info("Removed client from list.")
-                        continue
-                    server_id, method, param = message.to_parts()
-                    result = self.__do_query(int(server_id), method, param)
-                    message = Message(repr(result))
-                    r.send("%s" % str(message))
-            
+            try:
+                message = self.sock.cycle_reactor(
+                        settings.COLLECTOR_REACTOR_TIME)
+            except MalformedMessageException:
+                logger.exception("Exception parsing message:")
+                continue
+
+            if not message:
+                continue
+
+            server_id, method, param = message.to_parts()
+            result = self.__do_query(int(server_id), method, param)
+            message = Message(repr(result))
+            r.send(str(message))
+
         # time to go: closing all input sockets still open
-        for i in inputs:
-            i.close()
+        self.sock.close_all()
