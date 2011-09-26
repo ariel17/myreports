@@ -80,13 +80,36 @@ class Message(object):
 
     def __init__(self, body=None, server_id=None, method=None, param=''):
         super(Message, self).__init__()
+        self.__validate(body, server_id, method, param)
+        self.server_id = server_id
+        self.method = method.lower()
+        self.param = param
+
+    def __valiate(self, body=None, server_id=None, method=None, param=''):
+        """
+        """
         if body:
             if ':' not in body:
                 raise MalformedMessageException("Body message have none "\
                         "subparts (':'): '%s'" % body)
-            self.body = body
-        else:
-            self.body = "%d:%s:%s" % (server_id, method, param)
+            parts = body.split(':')
+            if len(parts) < 3:  # id, method, param
+                raise MalformedMessageException("Still missing some body "\
+                        "part: '%s'" % body)
+            server_id, method, param = parts
+        try:
+            server_id = int(server_id)
+        except:
+            raise MalformedMessageException("Parameter 'server_id' must "\
+                    "be integer.")
+        if server_id <= 0:
+            raise MalformedMessageException("Parameter 'server_id' must"\
+                    "be greater than 0.")
+
+        for (param, name) in ((method, 'method'), (param, 'param')):
+            if type(param) != str:
+            raise MalformedMessageException("Parameter '%s' must be str,"\
+                    " not %s" % (name, str(type(param))))
 
     def __str__(self):
         return self.__unicode__()
@@ -94,6 +117,9 @@ class Message(object):
     def __unicode__(self):
         return u"%s%s" % (str(len(self.body)).zfill(Message.HEAD_LENGTH),
                 self.body)
+
+    def get_body(self):
+        return u"%d:%s:%s" % (self.server_id, self.method, self.param)
 
     def to_parts(self):
         """
@@ -150,7 +176,7 @@ class SocketBasedCommunicator(object):
 
         if length == 0:
             logger.warning("Connection was lost while receiving message "\
-                    "header.")
+                    "header or there was an error on the content.")
             return None
 
         body = recv_inc(sock, length)
