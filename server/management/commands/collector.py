@@ -121,12 +121,17 @@ class Command(BaseCommand):
             help='Standard Out'),
         make_option('--stderr', action='store', dest='stderr', default=None,
             help='Standard Error'),
+        make_option('--host', action='store', dest='host', default="127.0.0.1",
+            help='Host to run query server on. Default: 127.0.0.1'),
+        make_option('--port', action='store', dest='port', default=9000,
+            type=int, help='Port to bind the query server on. Default: 9000'),
     )
     help = "Starts the collector daemon and fetch status of all MySQL servers"\
-            "configured.\n\nExample:\n\n"\
-            "$ python manage.py --stdout=/var/log/collector.log "\
-            "--stderr=/var/log/collector-error.log "\
-            "--pidfile=/var/run/collector.pid"
+            "configured.\n\n"\
+            "Example:\n\n"\
+            "$ python manage.py --stdout=/var/log/collector-out.log "\
+            "--stderr=/var/log/collector-err.log "\
+            "--pidfile=/var/run/collector.pid --host 0.0.0.0 --port 8000"
 
     workers = []
     context = daemon.DaemonContext()
