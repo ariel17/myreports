@@ -70,13 +70,13 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
+from myreports.collector.models import ServerWorker, QueryWorker
 from optparse import make_option
 import daemon
 from lockfile import FileLock, LockTimeout
 from sys import exit
 import signal
 import logging
-from utils.workers import ServerWorker, QueryWorker
 
 
 logger = logging.getLogger(__name__)
@@ -187,6 +187,8 @@ class Command(BaseCommand):
         self.pidfile = options['pidfile']
         self.uid = options['uid']
         self.gid = options['gid']
+        self.host = options['host']
+        self.port = options['port']
 
         logger.debug("Openning streams.")
         if self.stdin:
@@ -254,6 +256,8 @@ class Command(BaseCommand):
         logger.debug("'pidfile': %s" % self.pidfile)
         logger.debug("'uid': %s" % self.uid)
         logger.debug("'gid': %s" % self.gid)
+        logger.debug("'host': %s" % self.host)
+        logger.debug("'port': %s" % self.port)
 
         #Make pid lock file
         logger.debug("Locking PID file %s" % self.pidfile)
@@ -281,7 +285,8 @@ class Command(BaseCommand):
             self.workers.append(w)
 
         # TODO: must pass host and port as parameters
-        w = QueryWorker(id=9999, servers=servers, host="127.0.0.1", port=9000)
+        w = QueryWorker(id=9999, servers=servers, host=self.host,
+                port=self.port)
         w.start()
         self.workers.append(w)
 
