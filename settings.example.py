@@ -137,6 +137,8 @@ INSTALLED_APPS = (
     'server',
     'report',
     'history'
+    'collector',
+    'protocol',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -197,26 +199,37 @@ LOGGING = {
     'loggers': {
         'django.request': {
             'handlers': ['syslog', 'console', ],
+            'level': LOG_LEVEL,
             'propagate': True,
         },
         'server.management.commands.collector': {
             'handlers': ['daemon', 'mail_admins', ],
+            'level': LOG_LEVEL,
             'propagate': True,
         },
         'utils.workers': {
             'handlers': ['daemon', 'mail_admins', ],
+            'level': LOG_LEVEL,
+            'propagate': True,
+        },
+        'utils.protocol': {
+            'handlers': ['daemon', 'mail_admins', ],
+            'level': LOG_LEVEL,
             'propagate': True,
         },
         'myreports.server': {
             'handlers': ['mail_admins', 'console', ],
+            'level': LOG_LEVEL,
             'propagate': True,
         },
         'myreports.report': {
             'handlers': ['mail_admins', 'console', ],
+            'level': LOG_LEVEL,
             'propagate': True,
         },
         'report.models': {
             'handlers': ['mail_admins', 'console', ],
+            'level': LOG_LEVEL,
             'propagate': True,
         },
     },
