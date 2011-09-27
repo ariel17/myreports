@@ -57,7 +57,7 @@ class Message(object):
         self.method = method.lower()
         self.param = param
 
-    def __valiate(self, body=None, server_id=None, method=None, param=''):
+    def __validate(self, body=None, server_id=None, method=None, param=''):
         """
         Checks the parts given or the compiled body passed has the correct
         format. If some error is found an MalformedMessageException will be
@@ -90,8 +90,8 @@ class Message(object):
         return self.__unicode__()
 
     def __unicode__(self):
-        return u"%s%s" % (str(len(self.body)).zfill(Message.HEAD_LENGTH),
-                self.body)
+        body = self.get_body()
+        return u"%s%s" % (str(len(body)).zfill(Message.HEAD_LENGTH), body)
 
     def get_body(self):
         """
@@ -206,11 +206,18 @@ class SocketServer(SocketBasedCommunicator):
         self.inputs.append(client)
         return (client, address)
 
+    def close_client(self, sock):
+        """
+        """
+        sock.close()
+        self.inputs.remove(sock)
+
     def close_all(self):
         """
         Closes all sockets still handled.
         """
         [c.close() for c in self.inputs]
+        self.inputs = []
 
     def cycle_reactor(self, timeout):
         """
@@ -238,15 +245,19 @@ class SocketServer(SocketBasedCommunicator):
             if r == self.sock:
                 self.__accept()  # accepts a new client
                 return None
-            else:
+            try:
                 # handle a request from an already connected client
                 message = self.recv_message(r)
-                if not message:
-                    r.close()
-                    self.inputs.remove(r)
-                    logger.info("Removed client from list.")
-                    return None
-                return message
+            except MalformedMessageException:
+                logger.exception("Exception parsing message:")
+                self.close_client(r)
+                return None
+
+            if not message:
+                self.close_client(r)
+                logger.info("Removed client from list.")
+                return None
+            return message
 
 
 class SocketClient(SocketBasedCommunicator):
