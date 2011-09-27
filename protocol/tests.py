@@ -8,8 +8,8 @@ __author__ = "Ariel Gerardo Ríos (arielgerardorios@gmail.com)"
 
 
 from django.test import TestCase
-import protocol
-from workers import QueryWorker
+from protocol.models import Message, SocketClient
+from collector.models import QueryWorker
 import logging
 
 
@@ -32,7 +32,7 @@ class TestProtocolPackage(TestCase):
     def test_message_ok(self):
         """
         """
-        c = protocol.SocketClient(host=SERVER_HOST, port=SERVER_PORT)
+        c = SocketClient(host=SERVER_HOST, port=SERVER_PORT)
         message = Message(server_id=1, method='show_status', param='Uptime')
         result = c.send_message(message)
         c.close()
