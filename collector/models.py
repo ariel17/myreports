@@ -4,7 +4,7 @@ import threading
 from time import sleep, time
 import logging
 from math import floor
-from protocol import Message, MalformedMessageException, SocketServer
+from protocol.models import Message, MalformedMessageException, SocketServer
 import socket
 import select
 
@@ -135,7 +135,6 @@ class QueryWorker(Worker):
 
     def run(self):
         while self.running:
-
             try:
                 message = self.sock.cycle_reactor(
                         settings.COLLECTOR_REACTOR_TIME)
@@ -143,7 +142,7 @@ class QueryWorker(Worker):
                 logger.exception("Exception parsing message:")
                 continue
 
-            if not message:
+            if not message:  # new client or error. Nothing to do.
                 continue
 
             server_id, method, param = message.to_parts()
