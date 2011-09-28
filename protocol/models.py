@@ -28,8 +28,33 @@ class MalformedMessageException(Exception):
 
 class Message(object):
     """
-    This is a message to use for comunication between Collector server and
-    clients. Has the following components:
+    Basis for message based comunication protocol.
+    """
+    HEAD_LENGTH = 3  # chars
+
+    def __init__(self, **kwargs):
+        super(Message, self).__init__()
+        self.__validate(**kwargs)
+        self.__dict__.update(kwargs)
+
+    def __validate(self, **kwargs):
+        raise NotImplementedError("Must implement this method.")
+
+    def get_body(self):
+        raise NotImplementedError("Must implement this method.")
+
+    def __str__(self):
+        return self.__unicode__()
+
+    def __unicode__(self):
+        body = self.get_body()
+        return u"%s%s" % (str(len(body)).zfill(Message.HEAD_LENGTH), body)
+
+
+class RequestMessage(Message):
+    """
+    This is a request message to use for comunication between Collector server
+    and clients. Has the following components:
 
     [XXX] head: Integer zero-filled to left, 3 digits.
     [XXXXXXXX...] body: String with length as indicated in 'length' field.
@@ -48,21 +73,14 @@ class Message(object):
      |______> '020': The length of entire body.
 
     """
-    HEAD_LENGTH = 3  # chars
 
-    def __init__(self, body=None, server_id=None, method=None, param=''):
-        super(Message, self).__init__()
-        self.__validate(body, server_id, method, param)
-        self.server_id = server_id
-        self.method = method.lower()
-        self.param = param
-
-    def __validate(self, body=None, server_id=None, method=None, param=''):
+    def __validate(self, **kwargs):  # body=None, server_id=None, method=None, param=''):
         """
         Checks the parts given or the compiled body passed has the correct
         format. If some error is found an MalformedMessageException will be
         raised.
         """
+        body = kwargs.get('body', None)
         if body:
             if ':' not in body:
                 raise MalformedMessageException("Body message have none "\
@@ -72,6 +90,11 @@ class Message(object):
                 raise MalformedMessageException("Still missing some body "\
                         "part: '%s'" % body)
             server_id, method, param = parts
+        else:
+            server_id = kwargs.get('server_id', None)
+            method = kwargs.get('method', None)
+            param = kwargs.get('param', None)
+
         try:
             server_id = int(server_id)
         except:
@@ -86,13 +109,6 @@ class Message(object):
                 raise MalformedMessageException("Parameter '%s' must be str,"\
                     " not %s" % (name, str(type(param))))
 
-    def __str__(self):
-        return self.__unicode__()
-
-    def __unicode__(self):
-        body = self.get_body()
-        return u"%s%s" % (str(len(body)).zfill(Message.HEAD_LENGTH), body)
-
     def get_body(self):
         """
         Returns an unicode string with all parts of the message compiled into a
@@ -100,25 +116,14 @@ class Message(object):
         """
         return u"%d:%s:%s" % (self.server_id, self.method, self.param)
 
-    def to_parts(self):
-        """
-        Returns all parts of the body splited by ':'.
-        """
-        return self.body.split(':')
 
-    @classmethod
-    def decode(cls, raw):
-        """
-        Receives a raw message and decodes into a Message object, if the raw
-        content is valid.
-        """
-        if len(raw) < Message.HEAD_LENGTH:
-            return None
-        try:
-            l = int(raw[:Message.HEAD_LENGTH])
-        except:
-            return None
-        return cls(raw[Message.HEAD_LENGTH:])
+class ResponseMessage(Message):
+    """
+    docstring for ResponseMessage
+    """
+    pass
+    # TODO: this class
+
 
 
 class SocketBasedCommunicator(object):
@@ -146,14 +151,18 @@ class SocketBasedCommunicator(object):
         """
         return send_inc(self.sock, str(message))
 
-    def recv_message(self, sock):
+    def recv_message(self, sock=None):
         """
         Receives a message based in the protocol propoused in the Message
-        object. Makes some validations to detect if the client was gone or if
-        the integrity of the message is correct; if the message received is not
+        object sended by 'sock' socket; if None it works over the class socket.
+        Makes some validations to detect if the client was gone or if the 
+        integrity of the message is correct; if the message received is not
         consistent with what it says about itself it is discarded too. Returns
         a Message object if all is OK, None instead.
         """
+        if not sock:
+            sock = self.sock
+
         # handle a request from an already connected client
         body_length = recv_inc(sock, Message.HEAD_LENGTH)
         try:
