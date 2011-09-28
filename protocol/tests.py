@@ -33,10 +33,17 @@ class TestProtocolPackage(TestCase):
         """
         """
         c = SocketClient(host=SERVER_HOST, port=SERVER_PORT)
-        message = Message(server_id=1, method='show_status', param='Uptime')
-        result = c.send_message(message)
+        m = Message(server_id=1, method='show_status', param='Uptime')
+        result = c.send_message(m)
         c.close()
-        self.assertEqual(result, len(str(message)))
+
+        # checking correct message sending comparing message length against
+        # bytes transmitted.
+        self.assertEqual(result, len(str(m)))
+
+        # checking correct response message format
+        m = c.recv_message()
+
 
     def tearDown(self):
         self.qw.stop()
