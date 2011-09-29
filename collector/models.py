@@ -1,13 +1,9 @@
-from django.conf import settings
 from history.models import SnapshotFactory
 import threading
 from time import sleep, time
-import logging
 from math import floor
-from protocol.models import Message, MalformedMessageException, SocketServer
-import socket
-import select
-
+from protocol.models import RPCHandler
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -103,52 +99,17 @@ class ServerWorker(Worker):
 
 class QueryWorker(Worker):
     """
-    This is a worker to handle query request through a binded socket.
+    This is a worker to handle query request to do on a configured MySQL server
+    through JSON RPC protocol.
     """
-    servers = None
-    sock = None
+    handler = None
+    rpc = None
 
     def __init__(self, id, servers, host, port):
         super(QueryWorker, self).__init__(id)
-        self.servers = self.__servers_to_dict(servers)
-        self.sock = SocketServer(host, port, settings.COLLECTOR_MAX_WAITING)
-
-    def __servers_to_dict(self, servers_list):
-        """
-        Receives a list of Server objects and returns a dict with the same
-        objects indexed by id.
-        """
-        d = {}
-        for s in servers_list:
-            d[s.id] = s
-        return d
-
-    def __do_query(self, server_id, method, param):
-        """
-        Receives a Server id, a method and a param and returns the called
-        method with the parameter made to the correct object. If the server's
-        dict is empty it returns None.
-        """
-        server = self.servers.get(server_id, None)
-        return None if not server else getattr(self.servers[server_id],
-                method)(param)
+        self.rpc = SimpleJSONRPCServer((host, port))
+        self.rpc.register_instance(RPCHandler(servers))
 
     def run(self):
         while self.running:
-            try:
-                message = self.sock.cycle_reactor(
-                        settings.COLLECTOR_REACTOR_TIME)
-            except MalformedMessageException:
-                logger.exception("Exception parsing message:")
-                continue
-
-            if not message:  # new client or error. Nothing to do.
-                continue
-
-            server_id, method, param = message.to_parts()
-            result = self.__do_query(int(server_id), method, param)
-            message = Message(repr(result))
-            r.send(str(message))
-
-        # time to go: closing all input sockets still open
-        self.sock.close_all()
+            self.rpc.handle_request()
