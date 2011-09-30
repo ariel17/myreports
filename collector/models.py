@@ -2,7 +2,7 @@ from history.models import SnapshotFactory
 import threading
 from time import sleep, time
 from math import floor
-from protocol.models import RPCServer
+from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 import logging
 
 
@@ -98,6 +98,30 @@ class ServerWorker(Worker):
             self.server.close()
 
 
+class RPCHandler(object):
+    """
+    """
+    servers = {}
+
+    def __init__(self, servers):
+        super(RPCHandler, self).__init__()
+        self.__servers_to_dict(servers)
+
+    def __servers_to_dict(self, server_list):
+        """
+        Receives a list of Server objects and returns a dict with the same
+        objects indexed by id.
+        """
+        for s in server_list:
+            self.servers[s.id] = s
+
+    def call_method(self, id, method, kwargs={}):
+        """
+        """
+        s = self.servers[id]
+        return getattr(s, method)(**kwargs)
+
+
 class QueryWorker(Worker):
     """
     This is a worker to handle query request to do on a configured MySQL server
@@ -107,7 +131,8 @@ class QueryWorker(Worker):
 
     def __init__(self, id, servers, host, port):
         super(QueryWorker, self).__init__(id)
-        self.rpc = RPCServer(servers, host, port)
+        self.rpc = SimpleJSONRPCServer((host, port))
+        self.rpc.register_instance(RPCHandler(servers))        
 
     def stop(self):
         Worker.stop(self)

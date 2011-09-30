@@ -138,7 +138,6 @@ INSTALLED_APPS = (
     'report',
     'history'
     'collector',
-    'protocol',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -208,11 +207,6 @@ LOGGING = {
             'propagate': True,
         },
         'utils.workers': {
-            'handlers': ['daemon', 'mail_admins', ],
-            'level': LOG_LEVEL,
-            'propagate': True,
-        },
-        'utils.protocol': {
             'handlers': ['daemon', 'mail_admins', ],
             'level': LOG_LEVEL,
             'propagate': True,
