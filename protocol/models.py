@@ -8,6 +8,8 @@ __author__ = "Ariel Gerardo Ríos (arielgerardorios@gmail.com)"
 
 
 import logging
+from jsonrpclib import Server as JSONServer
+from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +43,12 @@ class RPCServer(SimpleJSONRPCServer):
     """
     """
     def __init__(self, mysql_servers, host, port):
-        super(RPCServer, self).__init__((host, port))
-        self.register_instance(RPCHandler(mysql_servers))
-        
+        SimpleJSONRPCServer((host, port))
+        self.register_instance(RPCHandler(mysql_servers))        
+
+
+class RPCClient(JSONServer):
+    """
+    """
+    def __init__(self, host, port):
+        JSONServer("http://%s:%d" % (host, port))
