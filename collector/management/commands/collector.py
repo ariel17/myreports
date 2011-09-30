@@ -275,8 +275,9 @@ class Command(BaseCommand):
             logger.info(">>> Daemon finished with errors.")
             exit(CONTEXT_ERROR)
 
-        servers = Server.objects.filter(active=True)
-        logger.debug("Servers fetched: %s" % repr(servers))
+        servers = [s for s in Server.objects.filter(active=True)
+                if s.connect()]
+        logger.debug("Servers fetched & connected: %s" % repr(servers))
 
         logger.info("Starting threads.")
         for i in range(len(servers)):
