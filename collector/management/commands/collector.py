@@ -121,10 +121,14 @@ class Command(BaseCommand):
             help='Standard Out'),
         make_option('--stderr', action='store', dest='stderr', default=None,
             help='Standard Error'),
-        make_option('--host', action='store', dest='host', default="127.0.0.1",
-            help='Host to run query server on. Default: 127.0.0.1'),
-        make_option('--port', action='store', dest='port', default=9000,
-            type=int, help='Port to bind the query server on. Default: 9000'),
+        make_option('--host', action='store', dest='host',
+            default=settings.COLLECTOR_CONF['host'],
+            help='Host to run query server on. Default: %s' %
+            settings.COLLECTOR_CONF['host']),
+        make_option('--port', action='store', dest='port',
+            default=settings.COLLECTOR_CONF['port'],
+            type=int, help='Port to bind the query server on. Default: %d' %
+            settings.COLLECTOR_CONF['port']),
     )
     help = "Starts the collector daemon and fetch status of all MySQL servers"\
             "configured.\n\n"\
@@ -268,7 +272,7 @@ class Command(BaseCommand):
             exit(ALREADY_RUNNING_ERROR)
         try:
             self.context.pidfile.acquire(
-                    timeout=settings.COLLECTOR_PIDLOCK_TIMEOUT)
+                    timeout=settings.COLLECTOR_CONF['pidlock_timeout'])
         except LockTimeout:
             self.context.pidfile.release()
             logger.exception("Can't lock PID file:")
