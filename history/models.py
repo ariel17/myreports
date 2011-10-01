@@ -139,7 +139,7 @@ class UsageSnapshot(Snapshot):
                     db.save()
             try:
                 s = cls.objects.get(database__id=db.id, qid=qid,
-                        duration__gte=duration, time__gte=date.today())
+                        duration__lte=duration, time__gte=date.today())
             except cls.DoesNotExist:
                 s = cls(database=db, qid=qid, duration=duration)
                 if must_save:
