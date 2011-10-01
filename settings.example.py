@@ -201,27 +201,17 @@ LOGGING = {
             'level': LOG_LEVEL,
             'propagate': True,
         },
-        'server.management.commands.collector': {
+        'collector': {
             'handlers': ['daemon', 'mail_admins', ],
             'level': LOG_LEVEL,
             'propagate': True,
         },
-        'utils.workers': {
-            'handlers': ['daemon', 'mail_admins', ],
-            'level': LOG_LEVEL,
-            'propagate': True,
-        },
-        'myreports.server': {
+        'server': {
             'handlers': ['mail_admins', 'console', ],
             'level': LOG_LEVEL,
             'propagate': True,
         },
-        'myreports.report': {
-            'handlers': ['mail_admins', 'console', ],
-            'level': LOG_LEVEL,
-            'propagate': True,
-        },
-        'report.models': {
+        'report': {
             'handlers': ['mail_admins', 'console', ],
             'level': LOG_LEVEL,
             'propagate': True,
@@ -236,3 +226,13 @@ COLLECTOR_DEFAULT_PERIOD = 10  # seconds
 COLLECTOR_MAX_WAITING = 20  # clients
 
 COLLECTOR_REACTOR_TIME = 2  # seconds
+
+
+
+
+
+
+
+
+
+
