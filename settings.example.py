@@ -51,7 +51,7 @@ USE_I18N = False
 # calendars according to the current locale
 USE_L10N = False
 
-DATETIME_FORMAT = "Y-m-d H:M:S"
+DATETIME_FORMAT = "Y-m-d H:i:s"
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
