@@ -43,7 +43,6 @@ class TestRPC(TestCase):
         d = dict(result)
         self.assertTrue(pattern in d)
 
-
     def tearDown(self):
         self.qw.stop()
         self.qw.join()
