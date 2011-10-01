@@ -219,20 +219,8 @@ LOGGING = {
     },
 }
 
-COLLECTOR_PIDLOCK_TIMEOUT = 3  # seconds
-
-COLLECTOR_DEFAULT_PERIOD = 10  # seconds
-
-COLLECTOR_MAX_WAITING = 20  # clients
-
-COLLECTOR_REACTOR_TIME = 2  # seconds
-
-
-
-
-
-
-
-
-
-
+COLLECTOR_CONF = {
+    'host': '127.0.0.1',
+    'port': 8000,
+    'pidlock_timeout': 3,  # seconds
+}
