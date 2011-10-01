@@ -115,7 +115,7 @@ class UsageSnapshot(Snapshot):
     database = models.ForeignKey(Database)
     qid = models.PositiveIntegerField(_("Value"), help_text="Current value"\
             " for this date.")
-    duration = models.PositiveIntegerField(_("Query time"), help_text="")
+    duration = models.IntegerField(_("Query time"), help_text="")
 
     def __unicode__(self):
         return u"Database='%s' qid=%s d=%s time='%s'" % (self.database,
