@@ -91,7 +91,7 @@ class VariableSnapshot(Snapshot):
         and for the given server.
         """
         return cls.objects.filter(server=server,
-                variable__id__in=[v.id for v in variables['variables']])
+                variable__id__in=[v.id for v in kwargs['variables']])
 
     @classmethod
     def get_current_values(cls, server, **kwargs):
@@ -101,7 +101,7 @@ class VariableSnapshot(Snapshot):
         """
         values = []
         for v in kwargs['variables']:
-            s = cls.take_snapshot(server, v, False)
+            s = cls.take_snapshot(server, must_save=False, variable=v)
             if s:
                 values.append(s)
         return values
