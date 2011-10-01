@@ -28,8 +28,10 @@ class TestRPC(TestCase):
     def setUp(self):
         logger.info("Setting up RPC Server at http://%s:%d" % (RPC_HOST,
             RPC_PORT))
-        self.servers = Server.objects.all()
-        [s.connect() for s in self.servers]
+        self.servers = [s for s in Server.objects.all() if s.connect()]
+        if not self.servers:
+            raise Exception("There is none MySQL server to connect and "\
+                    "perform tests.")
         self.qw = QueryWorker(id=1, servers=self.servers, host=RPC_HOST,
                 port=RPC_PORT)
         self.qw.start()
@@ -40,6 +42,7 @@ class TestRPC(TestCase):
         pattern = 'Uptime'
         c = JSONRPCClient("http://%s:%d" % (RPC_HOST, RPC_PORT))
         result = c.call_method(1, 'show_status', {'pattern': pattern})
+
         d = dict(result)
         self.assertTrue(pattern in d)
 

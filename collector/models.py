@@ -116,8 +116,8 @@ class RPCHandler(object):
     def call_method(self, id, method, kwargs={}):
         """
         """
-        s = self.servers[id]
-        return getattr(s, method)(**kwargs)
+        s = self.servers.get(id, None)
+        return getattr(s, method)(**kwargs) if s else None
 
 
 class QueryWorker(Worker):
