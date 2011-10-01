@@ -1,8 +1,6 @@
 from django.shortcuts import render_to_response, get_object_or_404
-
 from server.models import Server, ReportByServer
-from history.models import Snapshot
-
+from history.models import VariableSnapshot
 import logging
 
 
@@ -15,10 +13,10 @@ def show_all_reports(request, ip=None, id=None):
     server = get_object_or_404(Server, **({'ip': ip} if ip else {'id': id}))
 
     params = {
-            'server': server, 
+            'server': server,
             'permalink': server.get_absolute_url(),
-            'reports': {}, 
-            'sections': {}, 
+            'reports': {},
+            'sections': {},
     }
     for r in server.reports.all():
         uuid = ReportByServer.objects.get(server=server, report=r).uuid
@@ -27,17 +25,19 @@ def show_all_reports(request, ip=None, id=None):
             ss = None
             if not s.period:
                 if server.connect():
-                    ss = Snapshot.get_current_values(server, s.variables.all())
+                    ss = VariableSnapshot.get_current_values(server,
+                            variables=s.variables.all())
                     logger.debug("Current values collected for section: %s" %
                             repr(ss))
                 else:
                     # TODO: return 500
                     pass
             else:
-                ss = Snapshot.get_history(server, s.variables.all())
+                ss = VariableSnapshot.get_history(server,
+                        variables=s.variables.all())
                 logger.debug("History collected for section: %s" % repr(ss))
             params['sections'][s.id] = {
-                    'snapshots': ss, 
+                    'snapshots': ss,
                     'permalink': s.get_absolute_url(uuid)
             }
     logger.debug("Params: %s" % repr(params))
