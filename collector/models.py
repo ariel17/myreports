@@ -43,9 +43,6 @@ class ServerWorker(Worker):
         self.server = server
         logger.info("Handling server %s" % server)
 
-    def restart(self):
-        self.server.restart()
-
     def run(self):
         try:
             logger.debug("Connecting to server.")
@@ -93,7 +90,8 @@ class ServerWorker(Worker):
         finally:
             logger.info("Finishing thread.")
 
-    def __del__(self):
+    def stop(self):
+        Worker.stop(self)
         if self.server:
             self.server.close()
 
