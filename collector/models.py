@@ -130,7 +130,7 @@ class QueryWorker(Worker):
     def __init__(self, id, servers, host, port):
         super(QueryWorker, self).__init__(id)
         self.rpc = SimpleJSONRPCServer((host, port))
-        self.rpc.register_instance(RPCHandler(servers))        
+        self.rpc.register_instance(RPCHandler(servers))
 
     def stop(self):
         Worker.stop(self)
