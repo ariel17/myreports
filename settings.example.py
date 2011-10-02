@@ -216,6 +216,11 @@ LOGGING = {
             'level': LOG_LEVEL,
             'propagate': True,
         },
+        'history': {
+            'handlers': ['mail_admins', 'console', ],
+            'level': LOG_LEVEL,
+            'propagate': True,
+        },
     },
 }
 
