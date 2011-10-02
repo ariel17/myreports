@@ -127,7 +127,7 @@ class UsageSnapshot(Snapshot):
         """
         result = []
         for u in server.show_processlist():
-            if not u['db']:
+            if not u['db'] or u['command'] == 'Sleep':
                 continue
             logger.debug("Usage: %s" % repr(u))
             qid, duration = int(u['id']), int(u['time'])
