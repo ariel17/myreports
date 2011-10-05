@@ -18,23 +18,23 @@ def show_all_reports(request, ip=None, id=None):
             'reports': {},
             'sections': {},
     }
+    logger.debug("Fetching reports.")
     for r in server.reports.all():
         uuid = ReportByServer.objects.get(server=server, report=r).uuid
         params['reports'][r.id] = r.get_absolute_url(uuid)
         for s in r.sections.all():
-            ss = None
+            logger.debug("Section: %s" % s)
+            variables = s.variables.all()
+            logger.debug("Variables in this section: %s" % repr(variables))
             if not s.period:
-                if server.connect():
-                    ss = VariableSnapshot.get_current_values(server,
-                            variables=s.variables.all())
-                    logger.debug("Current values collected for section: %s" %
-                            repr(ss))
-                else:
-                    # TODO: return 500
-                    pass
+                logger.debug("Fetching current values.")
+                ss = VariableSnapshot.get_current_values(server,
+                        variables=variables)
+                logger.debug("Current values collected for section: %s" %
+                        repr(ss))
             else:
-                ss = VariableSnapshot.get_history(server,
-                        variables=s.variables.all())
+                logger.debug("Fetching history.")
+                ss = VariableSnapshot.get_history(server, variables=variables)
                 logger.debug("History collected for section: %s" % repr(ss))
             params['sections'][s.id] = {
                     'snapshots': ss,
