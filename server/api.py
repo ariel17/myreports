@@ -16,6 +16,7 @@ class ServerResource(ModelResource):
         queryset = Server.objects.all()
         resource_name = 'server'
         excludes = ['password', ]
+        ordering = ['id', ]
 
         
 class DatabaseResource(ModelResource):
@@ -23,3 +24,4 @@ class DatabaseResource(ModelResource):
     class Meta:
         queryset = Database.objects.all()
         resource_name = 'db'
+        ordering = ['server', 'id']
