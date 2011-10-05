@@ -1,18 +1,20 @@
 from django.conf.urls.defaults import patterns, include, url
-
-from server.views import show_all_reports
 from report.views import show_report
 from report.views import show_section
+
+from tastypie.api import Api
+from server.api import ServerResource, DatabaseResource
+
+api = Api(api_name='v1')
+api.register(ServerResource())
+api.register(DatabaseResource())
+
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'myreports.views.home', name='home'),
-    # url(r'^myreports/', include('myreports.foo.urls')),
-
     # Uncomment the admin/doc line below to enable admin documentation:
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
@@ -21,10 +23,10 @@ urlpatterns = patterns('',
 
     # application patterns
 
-    url(r'^server/(?P<id>\d+)/$', show_all_reports, name='show_all_reports'),
+    url(r'^server/', include('server.urls')),
 
-    url(r'^direct/(?P<uuid>[\w-]+)/$', show_report, name='show_report'),
+    url(r'^api/', include(api.urls)),
 
-    url(r'^direct/(?P<uuid>[\w-]+)/(?P<id>\d+)/$', show_section, name='show_section'),
+    url(r'^direct/', include('report.urls')),
 
 )
