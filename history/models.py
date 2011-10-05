@@ -12,6 +12,8 @@ from server.models import Server, Database
 from report.models import Variable
 from datetime import date
 from django.utils.translation import ugettext as _
+from jsonrpclib import Server as JSONRPCClient
+from django.conf import settings
 import logging
 
 
@@ -68,7 +70,7 @@ class VariableSnapshot(Snapshot):
         """
         return variable.type != 'c'
 
-    @classmethod
+
     def take_snapshot(cls, server, must_save=True, **kwargs):
         """
         Takes an snapshot for the value of the given variable on this server at
@@ -77,6 +79,39 @@ class VariableSnapshot(Snapshot):
         variable = kwargs['variable']
         value = server.show_status(pattern=variable.name)
         if len(value.keys()) == 0:  # pattern not found
+            return None
+        result = cls(server=server, variable=variable,
+                value=value[variable.name])
+        if must_save and result:
+            result.save()
+        return result
+
+    @classmethod
+    def take_snapshot(cls, server, must_save=True, direct=False, **kwargs):
+        """
+        Takes an snapshot for the value of the given variable on this server at
+        this moment.
+        """
+        variable = kwargs['variable']
+        if direct:
+            logger.debug("The snapshot will be direct.")
+            value = server.show_status(pattern=variable.name)
+        else:
+            logger.debug("The snapshot will be through collector daemon.")
+            rpc_url = "http://%s:%d" % (settings.COLLECTOR_CONF['host'],
+                    settings.COLLECTOR_CONF['port'])
+            logger.debug("Contacting to RPC server: %s" % rpc_url)
+            c = JSONRPCClient(rpc_url)
+            try:
+                value = c.call_method(server.id, 'show_status', {'pattern':
+                    variable.name, })
+            except:
+                logger.exception("An exception ocurred when contacting remote "\
+                        "server:")
+                return None
+        if not value or variable.name not in value:  # pattern not found
+            logger.debug("The pattern was not found. Value result: %s" %
+                    repr(value))
             return None
         result = cls(server=server, variable=variable,
                 value=value[variable.name])
