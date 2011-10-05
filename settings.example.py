@@ -206,6 +206,11 @@ LOGGING = {
             'level': LOG_LEVEL,
             'propagate': True,
         },
+        'myreports.collector.models': {
+            'handlers': ['daemon', 'mail_admins', ],
+            'level': LOG_LEVEL,
+            'propagate': True,
+        },
         'server': {
             'handlers': ['mail_admins', 'console', ],
             'level': LOG_LEVEL,
