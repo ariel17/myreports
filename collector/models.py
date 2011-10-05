@@ -75,8 +75,8 @@ class ServerWorker(Worker):
                     # do a snapshot.
                     if t % period == 0:
                         s = SnapshotFactory.take_snapshot(self.server,
-                                variable=v)
-                        logger.debug("Taked snapshot: %s" % s)
+                                variable=v, direct=True)
+                        logger.info("Taked snapshot: %s" % s)
 
                 # if t has reached max_period (time when all variables has
                 # been checked at least once), then base_time moves into
