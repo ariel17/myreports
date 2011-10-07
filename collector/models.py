@@ -2,7 +2,6 @@ from history.models import SnapshotFactory
 import threading
 from time import sleep, time
 from math import floor
-from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 import logging
 
 
@@ -31,11 +30,47 @@ class Worker(threading.Thread):
         raise NotImplementedError("Must implement this method.")
 
 
+class ServerRPCClientWorker(Worker):
+    """
+    This class wraps the Server class model with threading functionallity, to
+    check the values of the variables in its reports.
+    """
+    server = None
+    rpc = None
+
+    def __init__(self, id, server, rpc):
+        super(ServerRPCClientWorker, self).__init__(id)
+        self.server = server
+        self.rpc = rpc
+
+    def run(self):
+        try:
+            logger.info("Collecting info for server %s" % self.server)
+            variables = self.server.get_variables()
+            logger.debug("Variables to check: %s" % variables)
+
+            # check values for all variables of all reports assigned.
+            for (period, current, v) in variables:
+                # only numeric status variables or 'custom' type variables
+                # and not variables conforming sections for current values
+                # (current == True).
+                if v.data_type not in 'na' or current:
+                    continue
+
+                s = SnapshotFactory.take_snapshot(self.server, self.rpc,
+                        variable=v)
+                logger.info("Taked snapshot: %s" % s)
+
+        except Exception:
+            logger.exception("Error occoured when contacting RPC server:")
+        finally:
+            logger.info("Collect done.")
+
+
 class ServerWorker(Worker):
     """
     This class wraps the Server class model with threading functionallity.
     """
-
     server = None
 
     def __init__(self, id, server):

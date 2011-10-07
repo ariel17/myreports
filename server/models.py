@@ -144,7 +144,7 @@ class Server(MySQLHandler):
         for r in self.reports.all():
             for s in r.sections.all():
                 for v in s.variables.all():
-                    variables.add((s.period, v,))
+                    variables.add((s.period, s.current, v))
         return variables
 
     def get_periods(self):

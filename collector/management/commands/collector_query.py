@@ -12,6 +12,9 @@ __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from optparse import make_option
+from server.models import Server
+from collector.models import ServerRPCClientWorker
+from jsonrpclib import Server as JSONRPCClient
 from sys import exit
 import logging
 
@@ -33,8 +36,18 @@ class Command(BaseCommand):
     )
 
     help = ""
+    workers = []
 
     def handle(self, *args, **options):
         """
         """
-        pass
+
+        rpc_url = "http://%s:%d" % (options['host'], options['port'])
+        logger.debug("Contacting to RPC server: %s" % rpc_url)
+        c = JSONRPCClient(rpc_url)
+
+        for (id, s) in enumerate(Server.objects.filter(active=True)):
+            self.workers.append(ServerRPCClientWorker(id, s, c))
+
+        [w.start() for w in self.workers]
+        [w.join() for w in self.workers]

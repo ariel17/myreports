@@ -27,8 +27,8 @@ class Variable(models.Model):
             help_text="Variable name")
     data_type = models.CharField(_("Data Type"), max_length=1,
             choices=DATA_TYPE_CHOICES, help_text="Data type of the variable.")
-    type = models.CharField(_("Variable Type"), max_length=1,
-            choices=VARIABLE_TYPE_CHOICES, default='m', help_text="")
+    type = models.CharField(_("Variable Type"), max_length=1, default='m',
+            choices=VARIABLE_TYPE_CHOICES, help_text="")
     description = models.CharField(_("Description"), max_length=200,
             blank=True, help_text="What this variable means.")
 
@@ -60,10 +60,15 @@ class Section(WithText):
             null=True, help_text="Indicates the final position when "\
                     "presenting the information to the user. If this value "\
                     "is 0 or NULL, the order will not be garatized.")
+    current = models.BooleanField(_("Only current?"), default=False,
+            help_text="If `True`, it field indicates that this section only "\
+                    "shows the current values for all variables in it.")
     period = models.PositiveIntegerField(null=True, blank=True, default=None,
             help_text="How many seconds will perform an active check to "\
                     "generate historic content. If it is 0 or not setted, "\
                     "only current values will be checked.")
+
+    # TODO: Once we have the 'current' field, will be usefull period?
 
     def variables_involved(self):
         return u",".join([v.name for v in self.variables.all()])

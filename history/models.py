@@ -12,7 +12,6 @@ from server.models import Server, Database
 from report.models import Variable
 from datetime import date
 from django.utils.translation import ugettext as _
-from jsonrpclib import Server as JSONRPCClient
 from django.conf import settings
 import logging
 
@@ -87,37 +86,29 @@ class VariableSnapshot(Snapshot):
         return result
 
     @classmethod
-    def take_snapshot(cls, server, must_save=True, direct=False, **kwargs):
+    def take_snapshot(cls, server, rpc, must_save=True, **kwargs):
         """
         Takes an snapshot for the value of the given variable on this server at
         this moment.
         """
         variable = kwargs['variable']
-        if direct:
-            logger.debug("The snapshot will be direct.")
-            value = server.show_status(pattern=variable.name)
-        else:
-            logger.debug("The snapshot will be through collector daemon.")
-            rpc_url = "http://%s:%d" % (settings.COLLECTOR_CONF['host'],
-                    settings.COLLECTOR_CONF['port'])
-            logger.debug("Contacting to RPC server: %s" % rpc_url)
-            c = JSONRPCClient(rpc_url)
-            try:
-                value = c.call_method(server.id, 'show_status', {'pattern':
-                    variable.name, })
-            except:
-                logger.exception("An exception ocurred when contacting remote "\
-                        "server:")
-                return None
+        logger.info("Quering for to server for variable '%s'" % variable)
+        try:
+            value = rpc.call_method(server.id, 'show_status', {'pattern':
+                variable.name, })
+        except:
+            logger.exception("An exception ocurred when contacting remote "\
+                    "server:")
+            return None
         if not value or variable.name not in value:  # pattern not found
             logger.debug("The pattern was not found. Value result: %s" %
                     repr(value))
             return None
-        result = cls(server=server, variable=variable,
+        instance = cls(server=server, variable=variable,
                 value=value[variable.name])
-        if must_save and result:
-            result.save()
-        return result
+        if must_save and instance:
+            instance.save()
+        return instance
 
     @classmethod
     def get_history(cls, server, **kwargs):
@@ -157,11 +148,18 @@ class UsageSnapshot(Snapshot):
                 self.qid, self.duration, self.time)
 
     @classmethod
-    def take_snapshot(cls, server, must_save=True, **kwargs):
+    def take_snapshot(cls, server, rpc, must_save=True, **kwargs):
         """
         """
         result = []
-        for u in server.show_processlist():
+        try:
+            ps = rpc.call_method(server.id, 'show_processlist', {})
+        except:
+            logger.exception("An exception ocurred when contacting remote "\
+                    "server:")
+            return result
+        
+        for u in ps:
             if not u['db'] or u['command'] == 'Sleep':
                 continue
             logger.debug("Usage: %s" % repr(u))
@@ -193,8 +191,8 @@ class SnapshotFactory(object):
     """
     """
     @classmethod
-    def take_snapshot(cls, server, must_save=True, **kwargs):
+    def take_snapshot(cls, server, rpc, must_save=True, **kwargs):
         for c in Snapshot.__subclasses__():
             if c.is_snapshot_for(kwargs['variable']):
-                return c.take_snapshot(server, must_save, **kwargs)
+                return c.take_snapshot(server, rpc, must_save, **kwargs)
         return None

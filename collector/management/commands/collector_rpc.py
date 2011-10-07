@@ -70,7 +70,8 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
-from myreports.collector.models import RPCHandler
+from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+from collector.models import RPCHandler
 from optparse import make_option
 import daemon
 from lockfile import FileLock, LockTimeout
@@ -130,10 +131,11 @@ class Command(BaseCommand):
             type=int, help='Port to bind the query server on. Default: %d' %
             settings.COLLECTOR_CONF['port']),
     )
-    help = "Starts the collector daemon and fetch status of all MySQL servers"\
-            "configured.\n\n"\
+    help = "Starts the Collector RPC daemon and fetch status of all MySQL "\
+            "servers configured.\n\n"\
             "Example:\n\n"\
-            "$ python manage.py --stdout=/var/log/collector-out.log "\
+            "$ python manage.py collector_rpc "\
+            "--stdout=/var/log/collector-out.log "\
             "--stderr=/var/log/collector-err.log "\
             "--pidfile=/var/run/collector.pid --host 127.0.0.1 --port 8001"
 
@@ -319,7 +321,7 @@ class Command(BaseCommand):
 
         logger.info("Starting JSON RPC server.")
         self.rpc = SimpleJSONRPCServer((self.host, self.port))
-        self.rpc.register_instance(RPCHandler(self.get_servers()))
+        self.rpc.register_instance(RPCHandler(self.__connect_servers()))
         self.rpc.serve_forever()
 
         logger.info(">>> Core daemon finished.")
