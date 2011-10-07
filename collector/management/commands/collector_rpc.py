@@ -162,6 +162,10 @@ class Command(BaseCommand):
         self.__start_rpc()
 
     def __connect_servers(self):
+        """
+        Connects to all enabled MySQL servers in the model Server and stores
+        them in a list.
+        """
         logger.info("Connecting to servers.")
         self.servers = [s for s in Server.objects.filter(active=True)
                 if s.connect()]
@@ -169,19 +173,30 @@ class Command(BaseCommand):
         return self.servers
 
     def __close_servers(self):
+        """
+        Closes all current connections to MySQL servers.
+        """
         self.info("Closing all server connections.")
         [s.close() for s in self.servers]
         self.servers = []
 
     def __start_rpc(self):
+        """
+        Starts the JSON RPC server binded in host and port indicated by
+        parameter.
+        """
         logger.info("Starting JSON RPC server: %s %d" % (self.host, self.port))
         self.rpc = SimpleJSONRPCServer((self.host, self.port))
         self.rpc.register_instance(RPCHandler(self.__connect_servers()))
         self.rpc.serve_forever()
 
     def __stop_rpc(self):
+        """
+        Stops the JSON RPC server priviously started.
+        """
         logger.info("Stopping JSON RPC server.")
-        self.rpc.shutdown()
+        if self.rpc:
+            self.rpc.shutdown()
 
     def handle(self, *args, **options):
         """
