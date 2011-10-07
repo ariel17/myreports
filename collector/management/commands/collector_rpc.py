@@ -70,7 +70,7 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
-from myreports.collector.models import ServerWorker, QueryWorker
+from myreports.collector.models import RPCHandler
 from optparse import make_option
 import daemon
 from lockfile import FileLock, LockTimeout
@@ -137,7 +137,8 @@ class Command(BaseCommand):
             "--stderr=/var/log/collector-err.log "\
             "--pidfile=/var/run/collector.pid --host 0.0.0.0 --port 8000"
 
-    workers = []
+    rpc = None
+    servers = []
     context = daemon.DaemonContext()
 
     def tear_down(self):
@@ -145,18 +146,42 @@ class Command(BaseCommand):
         Handle to all task that must be made to close clean and fast.
         """
         logger.info("Tearing down.")
-        logger.debug("Stopping all threads.")
-        for w in self.workers:
-            w.stop()
+        logger.debug("Stopping JSON RPC server.")
+        self.__stop_rpc()
+        self.__close_servers()
 
     def reload_config(self):
         """
         Reloads configuration and reconnects for all servers.
         """
-        logger.info("Reloading configuration.")
+        logger.info(">>> Reloading configuration.")
         logger.debug("Restarting all connections.")
-        for w in self.workers:
-            w.restart()
+        self.__stop_rpc()
+        self.__close_servers()
+        self.__connect_servers()
+        self.__start_rpc()
+
+    def __connect_servers(self):
+        logger.info("Connecting to servers.")
+        self.servers = [s for s in Server.objects.filter(active=True)
+                if s.connect()]
+        logger.debug(repr(self.servers))
+        return self.servers
+
+    def __close_servers(self):
+        self.info("Closing all server connections.")
+        [s.close() for s in self.servers]
+        self.servers = []
+
+    def __start_rpc(self):
+        logger.info("Starting JSON RPC server: %s %d" % (self.host, self.port))
+        self.rpc = SimpleJSONRPCServer((self.host, self.port))
+        self.rpc.register_instance(RPCHandler(self.__connect_servers()))
+        self.rpc.serve_forever()
+
+    def __stop_rpc(self):
+        logger.info("Stopping JSON RPC server.")
+        self.rpc.shutdown()
 
     def handle(self, *args, **options):
         """
@@ -220,8 +245,6 @@ class Command(BaseCommand):
             self.context.stderr.close()
             exit(CONTEXT_ERROR)
 
-        # Adding signals handling
-
         logger.debug("Assingning signal handlers.")
         self.context.signal_map = {
                 signal.SIGTERM: self.tear_down,
@@ -279,24 +302,9 @@ class Command(BaseCommand):
             logger.info(">>> Daemon finished with errors.")
             exit(CONTEXT_ERROR)
 
-        servers = [s for s in Server.objects.filter(active=True)
-                if s.connect()]
-        logger.debug("Servers fetched & connected: %s" % repr(servers))
-
-        logger.info("Starting threads.")
-        for i in range(len(servers)):
-            w = ServerWorker(i, servers[i])
-            w.start()
-            self.workers.append(w)
-
-        # TODO: must pass host and port as parameters
-        w = QueryWorker(id=9999, servers=servers, host=self.host,
-                port=self.port)
-        w.start()
-        self.workers.append(w)
-
-        logger.debug("Waiting for threads to terminate.")
-        for w in self.workers:
-            w.join()
+        logger.info("Starting JSON RPC server.")
+        self.rpc = SimpleJSONRPCServer((self.host, self.port))
+        self.rpc.register_instance(RPCHandler(self.get_servers()))
+        self.rpc.serve_forever()
 
         logger.info(">>> Core daemon finished.")
