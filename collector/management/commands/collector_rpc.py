@@ -135,7 +135,7 @@ class Command(BaseCommand):
             "Example:\n\n"\
             "$ python manage.py --stdout=/var/log/collector-out.log "\
             "--stderr=/var/log/collector-err.log "\
-            "--pidfile=/var/run/collector.pid --host 0.0.0.0 --port 8000"
+            "--pidfile=/var/run/collector.pid --host 127.0.0.1 --port 8001"
 
     rpc = None
     servers = []
