@@ -41,7 +41,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         """
-
         rpc_url = "http://%s:%d" % (options['host'], options['port'])
         logger.debug("Contacting to RPC server: %s" % rpc_url)
         c = JSONRPCClient(rpc_url)
