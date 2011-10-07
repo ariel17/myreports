@@ -118,26 +118,3 @@ class RPCHandler(object):
         """
         s = self.servers.get(id, None)
         return getattr(s, method)(**kwargs) if s else None
-
-
-class QueryWorker(Worker):
-    """
-    This is a worker to handle query request to do on a configured MySQL server
-    through JSON RPC protocol.
-    """
-    rpc = None
-
-    def __init__(self, id, servers, host, port):
-        super(QueryWorker, self).__init__(id)
-        self.rpc = SimpleJSONRPCServer((host, port))
-        self.rpc.register_instance(RPCHandler(servers))
-
-    def stop(self):
-        Worker.stop(self)
-        try:
-            self.rpc.shutdown()
-        except:
-            pass
-
-    def run(self):
-        self.rpc.serve_forever()
