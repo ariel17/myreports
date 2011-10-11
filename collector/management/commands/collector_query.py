@@ -51,7 +51,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         """
-<<<<<<< HEAD
         logger.info(">>> Collector RPC client started.")
 
         #Make pid lock file
@@ -70,8 +69,6 @@ class Command(BaseCommand):
             logger.info(">>> Collector RPC client finished with errors.")
             exit(CONTEXT_ERROR)
         print self.pidfile.path    
-=======
->>>>>>> parent of a56c501... CHG: removed ServerWorker class.
 
         rpc_url = "http://%s:%d" % (options['host'], options['port'])
         logger.debug("Contacting to RPC server: %s" % rpc_url)
