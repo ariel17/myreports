@@ -189,7 +189,7 @@ class Command(BaseCommand):
         """
         logger.info("Starting JSON RPC server: %s %d" % (self.host, self.port))
         self.rpc = SimpleJSONRPCServer((self.host, self.port),
-                requestHandler=)
+                requestHandler=SimpleJSONRPCRequestHandler)
         self.rpc.register_instance(RPCHandler(self.__connect_servers()))
         self.rpc.serve_forever()
 
@@ -283,12 +283,7 @@ class Command(BaseCommand):
         logger.debug("Finishing loader process.")
         exit(SUCCESS)
 
-    def handle_daemon(self, *args, **options):
-        """
-        Perform the command's actions in the given daemon context
-        """
-        logger.info(">>> Daemon initialized.")
-
+    def log_params(self):
         logger.debug("'chroot_directory': %s" % self.context.chroot_directory)
         logger.debug("'working_directory': %s" %
                 self.context.working_directory)
@@ -303,6 +298,14 @@ class Command(BaseCommand):
         logger.debug("'gid': %s" % self.gid)
         logger.debug("'host': %s" % self.host)
         logger.debug("'port': %s" % self.port)
+
+    def handle_daemon(self, *args, **options):
+        """
+        Perform the command's actions in the given daemon context
+        """
+        logger.info(">>> Daemon initialized.")
+
+        self.log_params()
 
         #Make pid lock file
         logger.debug("Locking PID file %s" % self.pidfile)
@@ -320,9 +323,6 @@ class Command(BaseCommand):
             logger.info(">>> Daemon finished with errors.")
             exit(CONTEXT_ERROR)
 
-        logger.info("Starting JSON RPC server.")
-        self.rpc = SimpleJSONRPCServer((self.host, self.port))
-        self.rpc.register_instance(RPCHandler(self.__connect_servers()))
-        self.rpc.serve_forever()
+        self.__start_rpc()
 
         logger.info(">>> Core daemon finished.")
