@@ -1,3 +1,4 @@
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from history.models import SnapshotFactory
 import threading
 from time import sleep, time
@@ -6,6 +7,50 @@ import logging
 
 
 logger = logging.getLogger(__name__)
+
+
+class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
+    """
+    """
+    
+    def do_POST(self):
+        """
+        """
+        if not self.is_rpc_path_valid():
+            logger.warning("[HTTP 404] The path requested is not a valid "\
+                    "address.")
+            self.report_404()
+            return
+        try:
+            max_chunk_size = 10*1024*1024
+            size_remaining = int(self.headers["content-length"])
+            L = []
+            while size_remaining:
+                chunk_size = min(size_remaining, max_chunk_size)
+                L.append(self.rfile.read(chunk_size))
+                size_remaining -= len(L[-1])
+            data = ''.join(L)
+            c_ip, c_port = self.client_address
+            logger.info("Request from %s:%s: %s" % (c_ip, c_port, data))
+            response = self.server._marshaled_dispatch(data)
+            self.send_response(200)
+            logger.info("[HTTP 200] Request accepted.")
+        except Exception, e:
+            logger.exception("[HTTP 500] Internal Server Error:")
+            self.send_response(500)
+            err_lines = traceback.format_exc().splitlines()
+            trace_string = '%s | %s' % (err_lines[-3], err_lines[-1])
+            fault = jsonrpclib.Fault(-32603, 'Server error: %s' % trace_string)
+            response = fault.response()
+        if response == None:
+            response = ''
+        logger.info("Response: %s" % response)
+        self.send_header("Content-type", "application/json-rpc")
+        self.send_header("Content-length", str(len(response)))
+        self.end_headers()
+        self.wfile.write(response)
+        self.wfile.flush()
+        self.connection.shutdown(1)
 
 
 class Worker(threading.Thread):
