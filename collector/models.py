@@ -16,6 +16,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
     def do_GET(self):
         """
         """
+        c_ip, c_port = self.client_address
         logger.info("Request from %s:%s [GET]: %s" % (c_ip, c_port, data))
         logger.warning("[HTTP 400] Method not allowed.")
         self.send_response(400)
