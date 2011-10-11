@@ -12,6 +12,20 @@ logger = logging.getLogger(__name__)
 class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
     """
     """
+
+    def do_GET(self):
+        """
+        """
+        logger.info("Request from %s:%s [GET]: %s" % (c_ip, c_port, data))
+        logger.warning("[HTTP 400] Method not allowed.")
+        self.send_response(400)
+        response = ''
+        self.send_header("Content-type", "application/json-rpc")
+        self.send_header("Content-length", str(len(response)))
+        self.end_headers()
+        self.wfile.write(response)
+        self.wfile.flush()
+        self.connection.shutdown(1)
     
     def do_POST(self):
         """
@@ -31,7 +45,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
                 size_remaining -= len(L[-1])
             data = ''.join(L)
             c_ip, c_port = self.client_address
-            logger.info("Request from %s:%s: %s" % (c_ip, c_port, data))
+            logger.info("Request from %s:%s [POST]: %s" % (c_ip, c_port, data))
             response = self.server._marshaled_dispatch(data)
             self.send_response(200)
             logger.info("[HTTP 200] Request accepted.")
