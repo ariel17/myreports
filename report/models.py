@@ -63,12 +63,6 @@ class Section(WithText):
     current = models.BooleanField(_("Only current?"), default=False,
             help_text="If `True`, it field indicates that this section only "\
                     "shows the current values for all variables in it.")
-    period = models.PositiveIntegerField(null=True, blank=True, default=None,
-            help_text="How many seconds will perform an active check to "\
-                    "generate historic content. If it is 0 or not setted, "\
-                    "only current values will be checked.")
-
-    # TODO: Once we have the 'current' field, will be usefull period?
 
     def variables_involved(self):
         return u",".join([v.name for v in self.variables.all()])

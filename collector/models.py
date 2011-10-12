@@ -110,7 +110,7 @@ class ServerRPCClientWorker(Worker):
             logger.debug("Variables to check: %s" % variables)
 
             # check values for all variables of all reports assigned.
-            for (period, current, v) in variables:
+            for (current, v) in variables:
                 # only numeric status variables or 'custom' type variables
                 # and not variables conforming sections for current values
                 # (current == True).

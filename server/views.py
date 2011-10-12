@@ -26,7 +26,7 @@ def show_all_reports(request, ip=None, id=None):
             logger.debug("Section: %s" % s)
             variables = s.variables.all()
             logger.debug("Variables in this section: %s" % repr(variables))
-            if not s.period:
+            if s.current:
                 logger.debug("Fetching current values.")
                 ss = VariableSnapshot.get_current_values(server,
                         variables=variables)

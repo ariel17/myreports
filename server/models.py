@@ -144,30 +144,8 @@ class Server(MySQLHandler):
         for r in self.reports.all():
             for s in r.sections.all():
                 for v in s.variables.all():
-                    variables.add((s.period, s.current, v))
+                    variables.add((s.current, v))
         return variables
-
-    def get_periods(self):
-        """
-        Determines the minimun time period for heartbeat. This period is
-        determined by the Greatest Common Divisor between all specified time
-        periods in sections.
-        """
-        def gcd(a, b):
-            """
-            """
-            if not b:
-                return 0
-            if a % b == 0:
-                return b
-            return gcd(a, a % b)
-
-        # only variables with numeric period (period == None means chekc only
-        # current values).
-        periods = [v[0] for v in self.get_variables() if v[0]]
-        # based on http://code.activestate.com/recipes/577282-finding-the-
-        #   gcd-of-a-list-of-numbers-aka-reducing-/
-        return reduce(gcd, periods), max(periods)
 
     def __unicode__(self):
         return u"%s" % self.name

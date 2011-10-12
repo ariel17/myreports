@@ -17,7 +17,7 @@
         </div>
 
         <div id="check_type" name="check_type">
-            Check type: {% if not section.period %}Current values{% else %}Every {{ section.period }} seconds{% endif %}.
+            Check type: {% if section.current %}Current values{% else %}Time spaced.{% endif %}.
         </div>
 
         <div id="section_content" name="section_content">
@@ -26,7 +26,7 @@
                     <td><b>Variable</b></td>
                     <td>&nbsp;</td>
                     <td><b>Value</b></td>
-                    {% if section.period %}
+                    {% if not section.current %}
                         <td>&nbsp;</td>
                         <td><b>Date</b></td>
                     {% endif %}
@@ -41,7 +41,7 @@
                                             <td>{{ ss.variable.name }}</td>
                                             <td>&nbsp;</td>
                                             <td>{{ ss.value }}</td>
-                                            {% if section.period %}
+                                            {% if not section.current %}
                                                 <td>&nbsp;</td>
                                                 <td>{{ ss.time }}</td>
                                             {% endif %}

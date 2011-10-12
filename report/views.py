@@ -24,7 +24,7 @@ def show_report(request, uuid):
 
     for s in rs.report.sections.all():
         ss = None
-        if not s.period:
+        if s.current:
             if rs.server.connect():
                 ss = VariableSnapshot.get_current_values(rs.server,
                         variables=s.variables.all())
@@ -62,7 +62,7 @@ def show_section(request, uuid, id):
     }
 
     ss = None
-    if not s.period:
+    if s.current:
         if rs.server.connect():
             ss = VariableSnapshot.get_current_values(rs.server,
                     variables=s.variables.all())
