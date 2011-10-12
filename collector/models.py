@@ -110,15 +110,13 @@ class ServerRPCClientWorker(Worker):
             logger.debug("Variables to check: %s" % variables)
 
             # check values for all variables of all reports assigned.
-            for (current, v) in variables:
+            for v in variables:
                 # only numeric status variables or 'custom' type variables
-                # and not variables conforming sections for current values
-                # (current == True).
-                if v.data_type not in 'na' or current:
+                if v.data_type not in 'na':
                     continue
 
                 s = SnapshotFactory.take_snapshot(self.server, self.rpc,
-                        variable=v)
+                        variable=v, must_save=True)
                 logger.info("Taked snapshot: %s" % s)
 
         except Exception:

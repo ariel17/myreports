@@ -144,7 +144,7 @@ class Server(MySQLHandler):
         for r in self.reports.all():
             for s in r.sections.all():
                 for v in s.variables.all():
-                    variables.add((s.current, v))
+                    variables.add(v)
         return variables
 
     def __unicode__(self):

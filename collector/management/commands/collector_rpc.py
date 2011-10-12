@@ -176,7 +176,7 @@ class Command(BaseCommand):
 
     def __close_servers(self):
         """
-        Closes all current connections to MySQL servers.
+        Closes all existent connections to MySQL servers.
         """
         self.info("Closing all server connections.")
         [s.close() for s in self.servers]

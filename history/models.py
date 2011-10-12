@@ -92,7 +92,7 @@ class VariableSnapshot(Snapshot):
         this moment.
         """
         variable = kwargs['variable']
-        logger.info("Quering for to server for variable '%s'" % variable)
+        logger.info("Quering to server for variable '%s'" % variable)
         try:
             value = rpc.call_method(server.id, 'show_status', {'pattern':
                 variable.name, })
@@ -152,6 +152,7 @@ class UsageSnapshot(Snapshot):
         """
         """
         result = []
+        logger.info("Quering to server for current usage.")
         try:
             ps = rpc.call_method(server.id, 'show_processlist', {})
         except:
