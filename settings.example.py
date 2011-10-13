@@ -1,4 +1,5 @@
 # Django settings for myreports project.
+
 import os
 from logging.handlers import SysLogHandler
 
@@ -131,8 +132,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
-    # develop apps:
-    # 'django_extensions',
     # project apps:
     'server',
     'report',
@@ -234,3 +233,9 @@ COLLECTOR_CONF = {
     'port': 8000,
     'pidlock_timeout': 3,  # seconds
 }
+
+if DEBUG:
+    try:
+        from settings_devel import *
+    except:
+        pass
