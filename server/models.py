@@ -44,6 +44,18 @@ class MySQLHandler(models.Model):
     def __unicode__(self):
         return u"%s:%d" % (self.ip, self.port)
 
+    def test_connection(self):
+        """
+        Verifies if it is possible to connect to the server with current
+        parameters. It uses the functions 'connect()' and 'close()' to perform
+        the test, so be careful to call this method within an already connected
+        instance.
+        """
+        try:
+            return self.connect()
+        finally:
+            self.close()
+
     def connect(self):
         """
         Stablish a connection using current parameters.
