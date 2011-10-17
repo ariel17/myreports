@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from server.models import Server, ReportByServer
 from history.models import VariableSnapshot
@@ -48,23 +49,11 @@ def show_all_reports(request, ip=None, id=None):
 
 def test_connection(request):
     """
-    Tests a MySQL connection. Returns a boolean result in JSON format.
+    Tests a MySQL connection. Parameters spected are 'ip', 'username' and
+    'password'; returns a boolean result in JSON format.
     """
-    params = {"ip": False, "user": False, "password": False, }
-    for p in params:
-        if p in request.REQUEST:
-            params[p] = request.REQUEST[p]
-        else:
-            logger.warning("Missing parameter for request to test "\
-                    "connection: '%s'" % p)
-            json = simplejson.dumps({"result": False, })
-            return HttpResponse(json, mimetype='application/json')
-                
+    s = Server(**request.REQUEST)
+    json = simplejson.dumps({"result": s.test_connection(), })
 
-    logger.info("Request to test connection with parameters: %s" % repr(params))
-
-    s = Server(**params)
-    json = simplejson.dumps({"result": self.test_connection(), })
-
-    logger.info("Response: %s" % json)
+    logger.info("Response for test connection: %s" % json)
     return HttpResponse(json, mimetype='application/json')
