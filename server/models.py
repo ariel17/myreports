@@ -167,6 +167,27 @@ class Server(MySQLHandler):
         return ('show_all_reports', (self.id,))
 
 
+class ServerFactory:
+    """
+    TODO: add some docstring for ServerFactory
+    """
+    @staticmethod
+    def create(**kwargs):
+        """
+        TODO: add some docstring for this method.
+        """
+        port = kwargs.get('port', None)
+        if port:
+            try:
+                kwargs['port'] = int(port)
+            except:
+                message = "Can not convert to integer parameter 'port': "\
+                        "'%s'" % port
+                logger.exception(message)
+                return None, message
+        return Server(**kwargs), None       
+
+
 class ReportByServer(models.Model):
     """
     """
