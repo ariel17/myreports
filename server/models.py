@@ -185,7 +185,14 @@ class ServerFactory:
                         "'%s'" % port
                 logger.exception(message)
                 return None, message
-        return Server(**kwargs), None       
+
+        for k in ('host', 'username', 'password'):
+            if k not in kwargs:
+                message = "Missing parameter: '%s'." % k
+                logger.warn(message)
+                return None, message
+
+        return Server(**kwargs), None
 
 
 class ReportByServer(models.Model):
