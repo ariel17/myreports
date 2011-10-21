@@ -5,6 +5,17 @@
 {% block extrahead %}{{ block.super }}
 {% url 'admin:jsi18n' as jsi18nurl %}
 <script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
+<script type="text/javascript">
+    var $ = django.jQuery;
+    $('#testconnection').click(function() {
+        var url = '/server/test/?ip=127.0.0.1&port=3306&username=root&password=';
+        $.getJSON(url, function(data) {
+            $.each(data, function(key, val) { 
+                alert(key + ' = ' + val); 
+            }); 
+        }); 
+    });
+</script>
 {{ media }}
 {% endblock %}
 
@@ -26,11 +37,10 @@
 {% block content %}<div id="content-main">
 {% block object-tools %}
     <ul class="object-tools">
-        <li><a href="#" class="historylink">{% trans "Test connection" %}</a></li>
+        <li><a href="#" id="testconnection" class="historylink">{% trans "Test connection" %}</a></li>
         {% if change %}{% if not is_popup %}
             {% block object-tools-items %}
             <li><a href="history/" class="historylink">{% trans "History" %}</a></li>
-            <li><a href="#" class="historylink">{% trans "Test connection" %}</a></li>
             {% if has_absolute_url %}<li><a href="../../../r/{{ content_type_id }}/{{ object_id }}/" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
             {% endblock %}
         {% endif %}{% endif %}
