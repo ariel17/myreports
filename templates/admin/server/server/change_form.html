@@ -5,17 +5,6 @@
 {% block extrahead %}{{ block.super }}
 {% url 'admin:jsi18n' as jsi18nurl %}
 <script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
-<script type="text/javascript">
-    var $ = django.jQuery;
-    $('#testconnection').click(function() {
-        var url = '/server/test/?ip=127.0.0.1&port=3306&username=root&password=';
-        $.getJSON(url, function(data) {
-            $.each(data, function(key, val) { 
-                alert(key + ' = ' + val); 
-            }); 
-        }); 
-    });
-</script>
 {{ media }}
 {% endblock %}
 
@@ -45,6 +34,24 @@
             {% endblock %}
         {% endif %}{% endif %}
   </ul>
+  <script type="text/javascript">
+      var $ = django.jQuery;
+      $(document).ready(function() {
+              $('#testconnection').click(function() {
+                  var ip = $('#id_ip').val();
+                  var port = $('#id_port').val();
+                  var username = $('#id_username').val();
+                  var password = $('#id_password').val();
+
+                  var url = '/server/test/?ip=' + ip + '&port=' + port + '&username=' + username + '&password=' + password;
+                  $.getJSON(url, function(data) {
+                      $.each(data, function(key, val) { 
+                          alert(key + ' = ' + val); 
+                      }); 
+                  });
+              });
+      });        
+  </script>
 {% endblock %}
 <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.module_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %}
 <div>
