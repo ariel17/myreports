@@ -186,7 +186,7 @@ class ServerFactory:
                 logger.exception(message)
                 return None, message
 
-        for k in ('host', 'username', 'password'):
+        for k in ('ip', 'username', 'password'):
             if k not in kwargs:
                 message = "Missing parameter: '%s'." % k
                 logger.warn(message)
