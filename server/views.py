@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
-from server.models import Server, ReportByServer
+from server.models import Server, ServerFactory, ReportByServer
 from history.models import VariableSnapshot
 import simplejson
 import logging
@@ -52,8 +52,15 @@ def test_connection(request):
     Tests a MySQL connection. Parameters spected are 'ip', 'username' and
     'password'; returns a boolean result in JSON format.
     """
-    s = Server(**request.REQUEST)
-    json = simplejson.dumps({"result": s.test_connection(), })
 
+    s, message = ServerFactory.create(**request.REQUEST)
+    if not s:
+        d = {"result": False, "message": message, }
+    else:
+        test = s.test_connection()
+        d = {"result": test, "message": "Success" if test else
+                "Invalid credentials"}
+
+    json = simplejson.dumps(d)
     logger.info("Response for test connection: %s" % json)
     return HttpResponse(json, mimetype='application/json')
