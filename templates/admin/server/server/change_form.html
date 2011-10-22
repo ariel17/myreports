@@ -6,6 +6,15 @@
 {% url 'admin:jsi18n' as jsi18nurl %}
 <script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
 {{ media }}
+
+{# Alert dialogs for test connection #}
+<script src="{% admin_media_prefix %}js/jquery.js" type="text/javascript"></script>
+<script src="{% admin_media_prefix %}js/jquery.ui.draggable.js" type="text/javascript"></script> 
+<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/jquery.alerts.css" />
+<script type="text/javascript">var $ = django.jquery;</script>
+<script type="text/javascript" src="{% admin_media_prefix %}js/jquery.alerts.js"></script>
+<script type="text/javascript" src="{% admin_media_prefix %}js/jquery.testconnection.js"></script>
+
 {% endblock %}
 
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />{% endblock %}
@@ -34,24 +43,12 @@
             {% endblock %}
         {% endif %}{% endif %}
   </ul>
-  <script type="text/javascript">
-      var $ = django.jQuery;
-      $(document).ready(function() {
-              $('#testconnection').click(function() {
-                  var ip = $('#id_ip').val();
-                  var port = $('#id_port').val();
-                  var username = $('#id_username').val();
-                  var password = $('#id_password').val();
-
-                  var url = '/server/test/?ip=' + ip + '&port=' + port + '&username=' + username + '&password=' + password;
-                  $.getJSON(url, function(data) {
-                      $.each(data, function(key, val) { 
-                          alert(key + ' = ' + val); 
-                      }); 
-                  });
-              });
-      });        
-  </script>
+  
+  
+  
+  
+  
+  
 {% endblock %}
 <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.module_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %}
 <div>
