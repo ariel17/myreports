@@ -11,6 +11,20 @@ DATABASES = {
     }
 }
 
+MEDIA_ROOT = ''
+
+MEDIA_URL = ''
+
+STATIC_ROOT = ''
+
+STATIC_URL = '/static/'
+
+ADMIN_MEDIA_PREFIX = '/static/admin/'
+
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_ROOT, "static/"),
+)
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
