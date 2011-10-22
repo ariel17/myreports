@@ -58,8 +58,8 @@ def test_connection(request):
         d = {"result": False, "message": message, }
     else:
         test = s.test_connection()
-        d = {"result": test, "message": "Success" if test else
-                "Invalid credentials"}
+        d = {"result": test, "message": "Test connection successful" if test
+                else "Invalid credentials"}
 
     json = simplejson.dumps(d)
     logger.info("Response for test connection: %s" % json)
