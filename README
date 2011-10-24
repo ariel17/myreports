@@ -1,0 +1,32 @@
+* MyReports * Statistic reports for MySQL servers
+=================================================
+
+By Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)
+
+
+Description
+-----------
+
+This is a personal project realized in Python language and Django v1.3 web
+framework. Basically, it is a statistic collector and customizable reports
+generator for one or more MySQL servers configured.
+
+
+About my problem
+----------------
+
+The motivation to do this kind of system was, in a few words, bad project
+managing, inexistence of deployment politics and a missing database
+administration inside an organization where I was working once. Databases were
+created on-demand, inside -any- MySQL server "available", used all the time
+needed, and then forgeted; so for database owner, its life cycle was "Creation
+-> Use -> Forget". It becomes a quickly a problem for all that it represents:
+disk space comsumption, access control and overhead.
+
+TODO more description about the problem.
+
+
+About this solution
+-------------------
+
+TODO more description about the solution.
