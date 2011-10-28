@@ -210,6 +210,27 @@ class ReportByServer(models.Model):
         return u"ReportByServer report_id=%d server_id=%d order=%d uuid=%s" % \
                 (self.report.id, self.server.id, self.order, self.uuid)
 
+    def get_rrd_path(self):
+        """
+        """
+        return os.path.join(settings.PROJECT_ROOT, "rrd/%s.rrd" % self.uuid)
+
+    def create_rrd(self):
+        """
+        Creates the RRDTool file associated to this server-section. If it
+        already exists does nothing.
+        """
+        data_sources = [ "DS:%s:COUNTER:60:U:U" % v.name for v in
+                self.section.variables.all()]
+
+        if not os.path.exists(path):
+            rrdtool.create(self.get_rrd_path(),
+                    "--start", time.time(),
+                    data_sources,
+                    'RRA:AVERAGE:0.5:1:24',
+                    'RRA:AVERAGE:0.5:6:10'
+            )
+
 
 class Database(models.Model):
     """
