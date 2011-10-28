@@ -146,3 +146,38 @@ class RPCHandler(object):
         """
         s = self.servers.get(id, None)
         return getattr(s, method)(**kwargs) if s else None
+    
+
+class RRDToolWrapper:
+    """
+    TODO: add some docstring for RRDToolWrapper
+    """
+
+    def __init__(self, arg):
+        super(RRDToolWrapper, self).__init__()
+        self.arg = arg
+
+    def __unicode__(self):
+        return u"<RRDToolWrapper arg='%s'>" % str(self.arg)
+    
+    def get_rrd_path(self):
+        """
+        """
+        return os.path.join(settings.PROJECT_ROOT,
+                "rrd/server-%d-report-%d-section-%d.rrd" % ())
+                                                                          
+    def create_rrd(self):
+        """
+        Creates the RRDTool file associated to this server-section. If it
+        already exists does nothing.
+        """
+        data_sources = [ "DS:%s:COUNTER:60:U:U" % v.name for v in
+                self.section.variables.all()]
+                                                                          
+        if not os.path.exists(path):
+            rrdtool.create(self.get_rrd_path(),
+                    "--start", time.time(),
+                    data_sources,
+                    'RRA:AVERAGE:0.5:1:24',
+                    'RRA:AVERAGE:0.5:6:10'
+            )
