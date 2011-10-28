@@ -73,7 +73,6 @@ class Worker(threading.Thread):
     This is a generic threaded worker.
     """
 
-    server = None
     running = True
 
     def __init__(self, id):
