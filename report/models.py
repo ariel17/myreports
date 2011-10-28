@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from utils.fields import UUIDField
 from django.utils.translation import ugettext as _
 import settings
 import logging
@@ -71,8 +70,8 @@ class Section(WithText):
         return u"%s" % self.title
 
     @models.permalink
-    def get_absolute_url(self, report_server_uuid):
-        return ('show_section', (report_server_uuid, self.id,))
+    def get_absolute_url(self, reportbyserver_id, section_id):
+        return ('show_section', (reportbyserver_id, section_id,))
 
 
 class Report(WithText):
@@ -90,8 +89,8 @@ class Report(WithText):
         return u"%s" % (self.title)
 
     @models.permalink
-    def get_absolute_url(self, report_server_uuid):
-        return ('show_report', (report_server_uuid,))
+    def get_absolute_url(self, id):
+        return ('show_report', (id,))
 
 
 class SectionByReport(models.Model):
@@ -103,9 +102,7 @@ class SectionByReport(models.Model):
             null=True, help_text="Indicates the final position when "\
                     "presenting the information to the user. If this value "\
                     "is 0 or NULL, the order will not be garatized.")
-    uuid = UUIDField(editable=False)
 
     def __unicode__(self):
-        return u"SectionByReport report_id=%d section_id=%d order=%d "\
-                "uuid=%s" % (self.report.id, self.section.id, self.order,
-                        self.uuid)
+        return u"SectionByReport report_id=%d section_id=%d order=%d" % \
+                (self.report.id, self.section.id, self.order)
