@@ -146,18 +146,6 @@ class Server(MySQLHandler):
         """
         return u",".join([r.title for r in self.reports.all()])
 
-    def get_variables(self):
-        """
-        Returns all variables associated to this server through reports and its
-        sections.
-        """
-        variables = set()
-        for r in self.reports.all():
-            for s in r.sections.all():
-                for v in s.variables.all():
-                    variables.add(v)
-        return variables
-
     def __unicode__(self):
         return u"%s" % self.name
 
