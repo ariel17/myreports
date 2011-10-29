@@ -27,7 +27,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
         self.wfile.write(response)
         self.wfile.flush()
         self.connection.shutdown(1)
-    
+
     def do_POST(self):
         """
         """
@@ -37,7 +37,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
             self.report_404()
             return
         try:
-            max_chunk_size = 10*1024*1024
+            max_chunk_size = 10 * 1024 * 1024
             size_remaining = int(self.headers["content-length"])
             L = []
             while size_remaining:
@@ -103,25 +103,26 @@ class ServerRPCClientWorker(Worker):
         self.rpc = rpc
 
     def run(self):
-        try:
-            logger.info("Collecting info for server %s" % self.server)
-            variables = self.server.get_variables()
-            logger.debug("Variables to check: %s" % variables)
+        for r in self.server.reports.all():
+            for s in r.sections.all():
+                for v in s.variables.all():
+                    rrd = RRDToolWrapper.get_rrd_path(self.server.id, s.id,
+                            v.id)
+                    RRDToolWrapper.create_rrd(path, v.name)
+                    
+                    try:
+                        value = rpc.call_method(self.server.id, 'show_status',
+                                {'pattern': v.name, })
+                    except:
+                        logger.exception("An exception ocurred when "\
+                                "contacting RPC server:")
+                        continue
 
-            # check values for all variables of all reports assigned.
-            for v in variables:
-                # only numeric status variables or 'custom' type variables
-                if v.data_type not in 'na':
-                    continue
+                    if not value or v.name not in value:  # pattern not found
+                        logger.debug("The pattern was not found. "\
+                                "Value result: %s" % repr(value))
 
-                s = SnapshotFactory.take_snapshot(self.server, self.rpc,
-                        variable=v, must_save=True)
-                logger.info("Taked snapshot: %s" % s)
-
-        except Exception:
-            logger.exception("Error occoured when contacting RPC server:")
-        finally:
-            logger.info("Collect done.")
+                    RRDToolWrapper.update(path, value[v.name])
 
 
 class RPCHandler(object):
@@ -146,38 +147,35 @@ class RPCHandler(object):
         """
         s = self.servers.get(id, None)
         return getattr(s, method)(**kwargs) if s else None
-    
+
 
 class RRDToolWrapper:
     """
     TODO: add some docstring for RRDToolWrapper
     """
-
-    def __init__(self, arg):
-        super(RRDToolWrapper, self).__init__()
-        self.arg = arg
-
-    def __unicode__(self):
-        return u"<RRDToolWrapper arg='%s'>" % str(self.arg)
-    
-    def get_rrd_path(self):
+    @classmethod
+    def get_rrd_path(cls, server_id, section_id, variable_id):
         """
         """
-        return os.path.join(settings.PROJECT_ROOT,
-                "rrd/server-%d-report-%d-section-%d.rrd" % ())
-                                                                          
-    def create_rrd(self):
+        return os.path.join(settings.PROJECT_ROOT, "rrd/s%ds%dv%d.rrd" %
+                (server_id, section_id, variable_id))
+
+    @classmethod
+    def create_rrd(cls, path, source):
         """
         Creates the RRDTool file associated to this server-section. If it
         already exists does nothing.
         """
-        data_sources = [ "DS:%s:COUNTER:60:U:U" % v.name for v in
-                self.section.variables.all()]
-                                                                          
         if not os.path.exists(path):
-            rrdtool.create(self.get_rrd_path(),
-                    "--start", time.time(),
-                    data_sources,
+            data_sources = ["DS:%s:COUNTER:60:U:U" % source]
+            rrdtool.create(path, "--start", time.time(), data_sources,
                     'RRA:AVERAGE:0.5:1:24',
                     'RRA:AVERAGE:0.5:6:10'
             )
+
+    @classmethod
+    def update_rrd(cls, path, value, timestamp=None):
+        """TODO: add some docstring for update_rrd"""
+        rrdtool.update(path, "%s:%s" %
+                (source, timestamp if timestamp else time.time()),
+        )
