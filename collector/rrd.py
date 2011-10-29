@@ -90,9 +90,11 @@ class RRD:
         # we need the values in a colon delimited list to add to our command line
         # so we take the list of values, convert them to strings and append a colon to each,
         # join the list into a string, and chop the last character to remove the trailing colon    
-        values_args = ''.join([str(value) + ":" for value in values])[:-1]
+        # values_args = ''.join([str(value) + ":" for value in values])[:-1]
+        values_args = ":".join(values)
         # build the command line to send to RRDtool
-        cmd_update = ''.join(('rrdtool update ', self.rrd_name, ' N:',)) + values_args     
+        # cmd_update = ''.join(('rrdtool update ', self.rrd_name, ' N:',)) + values_args     
+        cmd_update = "rrdtool update %s N:%s" % (self.rrd_name, values_args)
         # execute the command as a subprocess and return file objects (child_stdin, child_stdout_and_stderr)
         cmd = os.popen4(cmd_update)
         cmd_output = cmd[1].read()
