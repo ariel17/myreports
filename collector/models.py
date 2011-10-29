@@ -1,9 +1,10 @@
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-from history.models import SnapshotFactory
 import threading
 from time import sleep, time
 from math import floor
 import logging
+import os
+import rrdtool
 
 
 logger = logging.getLogger(__name__)

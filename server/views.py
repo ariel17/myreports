@@ -1,7 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from server.models import Server, ServerFactory, ReportByServer
-from history.models import VariableSnapshot
 import simplejson
 import logging
 
@@ -30,16 +29,9 @@ def show_all_reports(request, ip=None, id=None):
             logger.debug("Variables in this section: %s" % repr(variables))
             if s.current:
                 logger.debug("Fetching current values.")
-                ss = VariableSnapshot.get_current_values(server,
-                        variables=variables)
-                logger.debug("Current values collected for section: %s" %
-                        repr(ss))
             else:
                 logger.debug("Fetching history.")
-                ss = VariableSnapshot.get_history(server, variables=variables)
-                logger.debug("History collected for section: %s" % repr(ss))
             params['sections'][s.id] = {
-                    'snapshots': ss,
                     'permalink': s.get_absolute_url(uuid)
             }
     logger.debug("Params: %s" % repr(params))

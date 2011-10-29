@@ -12,27 +12,13 @@ class Variable(models.Model):
     """
     Represents a MySQL variable.
     """
-    DATA_TYPE_CHOICES = (
-            ('s', 'String'),
-            ('n', 'Numeric'),
-            ('b', 'Boolean'),
-            ('a', 'Abstract'),
-            )
-    VARIABLE_TYPE_CHOICES = (
-            ('m', 'MySQL Variable'),
-            ('c', 'Variable as Command'),
-            )
     name = models.CharField(_("Name"), unique=True, max_length=50,
             help_text="Variable name")
-    data_type = models.CharField(_("Data Type"), max_length=1,
-            choices=DATA_TYPE_CHOICES, help_text="Data type of the variable.")
-    type = models.CharField(_("Variable Type"), max_length=1, default='m',
-            choices=VARIABLE_TYPE_CHOICES, help_text="")
     description = models.CharField(_("Description"), max_length=200,
             blank=True, help_text="What this variable means.")
 
     def __unicode__(self):
-        return u"%s (dt=%s, t=%s)" % (self.name, self.data_type, self.type)
+        return u"%s" % self.name
 
 
 class WithText(models.Model):
@@ -81,6 +67,8 @@ class Report(WithText):
     """
     sections = models.ManyToManyField(Section, through='SectionByReport',
             help_text="Sections conforming this report (also body).")
+    with_usage = models.BooleanField(_("With usage?"), default=False,
+            help_text="If `True`, it also collects usage statistics.")
 
     def sections_involved(self):
         return u",".join([s.title for s in self.sections.all()])

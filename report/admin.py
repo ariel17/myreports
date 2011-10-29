@@ -22,13 +22,12 @@ class SectionAdmin(admin.ModelAdmin):
 
 
 class VariableAdmin(admin.ModelAdmin):
-    list_display = ("name", "type", "data_type", "description",)
-    list_filter = ("type", "data_type")
-    ordering = ("name", "type", "data_type")
+    list_display = ("name", "description",)
+    ordering = ("name",)
 
 
 class SectionByReportAdmin(admin.ModelAdmin):
-    list_display = ("report", "section", "order", "uuid")
+    list_display = ("report", "section", "order")
 
 
 admin.site.register(Report, ReportAdmin)
