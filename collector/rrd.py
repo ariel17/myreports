@@ -59,7 +59,8 @@ class RRD:
         # unpack the tuples from the list and build the string of data sources used to create the RRD
         ds_string = ''
         for ds_name, ds_type, ds_min, ds_max in data_sources:
-            ds_string = ''.join((ds_string, ' DS:', str(ds_name), ':', str(ds_type), ':', heartbeat, ':', str(ds_min), ':', str(ds_max)))
+            # ds_string = ''.join((ds_string, ' DS:', str(ds_name), ':', str(ds_type), ':', heartbeat, ':', str(ds_min), ':', str(ds_max)))
+            ds_string += ':'.join((' DS', str(ds_name), str(ds_type), heartbeat, str(ds_min), str(ds_max)))
         
         # build the command line to send to RRDtool        
         cmd_create = ''.join((
