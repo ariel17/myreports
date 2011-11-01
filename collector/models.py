@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
     """
     """
+    MAX_CHUNK_SIZE = 10 * 1024 * 1024
 
     def do_GET(self):
         """
@@ -38,12 +39,12 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
                     "address.")
             self.report_404()
             return
+
         try:
-            max_chunk_size = 10 * 1024 * 1024
             size_remaining = int(self.headers["content-length"])
             L = []
             while size_remaining:
-                chunk_size = min(size_remaining, max_chunk_size)
+                chunk_size = min(size_remaining, self.MAX_CHUNK_SIZE)
                 L.append(self.rfile.read(chunk_size))
                 size_remaining -= len(L[-1])
             data = ''.join(L)
@@ -52,7 +53,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
             response = self.server._marshaled_dispatch(data)
             self.send_response(200)
             logger.info("[HTTP 200] Request accepted.")
-        except Exception, e:
+        except Exception:
             logger.exception("[HTTP 500] Internal Server Error:")
             self.send_response(500)
             err_lines = traceback.format_exc().splitlines()
@@ -114,19 +115,21 @@ class ServerRPCClientWorker(Worker):
         for r in self.server.reports.all():
             for s in r.sections.all():
                 for v in s.variables.all():
+                    logger.info("Contacting RPC about '%s' for %s (%s)" %
+                            (v.name, self.server.name, self.server.ip))
                     rrd = rrdtool.RRD(self.get_rrd_path(self.server.id, s.id, v.id))
-                    rrd.create_rrd(60, ((v.name, 'N', 0, 1000),))
+                    rrd.create_rrd(60, ((v.name, 'COUNTER', 'U', 'U'),))
                     try:
-                        value = rpc.call_method(self.server.id, 'show_status',
+                        value = self.rpc.call_method(self.server.id, 'show_status',
                                 {'pattern': v.name, })
                     except:
                         logger.exception("An exception ocurred when "\
                                 "contacting RPC server:")
                         continue
 
-                    if not value or v.name not in value:  # pattern not found
-                        logger.debug("The pattern was not found. "\
-                                "Value result: %s" % repr(value))
+                    logger.info("Query result: %s" % repr(value))
+                    if not value or v.name not in value:
+                        continue
 
                     rrd.update(value[v.name])
 
