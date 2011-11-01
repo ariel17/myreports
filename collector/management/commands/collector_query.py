@@ -21,7 +21,7 @@ import logging
 from os.path import join
 
 
-SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_ERROR = range(3)
+SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_ERROR, RPCSERVER_ERROR = range(4)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         """
-        logger.info(">>> Collector RPC client started.")
+        logger.info("** Collector RPC client started. **")
 
         #Make pid lock file
         logger.debug("Locking PID file %s" % options['pidfile'])
@@ -59,26 +59,35 @@ class Command(BaseCommand):
         if self.pidfile.is_locked():
             logger.error("PID file is already locked (other process "\
                 "running?).")
+            logger.error("** Collector RPC client finished with errors. **")
             exit(ALREADY_RUNNING_ERROR)
         try:
-            self.pidfile.acquire(
-                    timeout=settings.COLLECTOR_CONF['pidlock_timeout'])
-        except LockTimeout:
-            self.context.pidfile.release()
-            logger.exception("Can't lock PID file:")
-            logger.info(">>> Collector RPC client finished with errors.")
-            exit(CONTEXT_ERROR)
-        print self.pidfile.path    
+            try:
+                self.pidfile.acquire(
+                        timeout=settings.COLLECTOR_CONF['pidlock_timeout'])
+            except LockTimeout:
+                logger.exception("Can't lock PID file:")
+                logger.error("** Collector RPC client finished with errors. **")
+                exit(CONTEXT_ERROR)
 
-        rpc_url = "http://%s:%d" % (options['host'], options['port'])
-        logger.debug("Contacting to RPC server: %s" % rpc_url)
-        c = JSONRPCClient(rpc_url)
+            rpc_url = "http://%s:%d" % (options['host'], options['port'])
+            logger.debug("RPC server in %s" % rpc_url)
+            try:
+                c = JSONRPCClient(rpc_url)
+            except Exception:
+                logger.exception("Exception occurred when trying to contact "\
+                        "RPC server:")
+                logger.error("** Collector RPC client finished with errors. **")
+                exit(RPCSERVER_ERROR)
+                
+            for (id, s) in enumerate(Server.objects.filter(active=True)):
+                self.workers.append(ServerRPCClientWorker(id, s, c))
 
-        for (id, s) in enumerate(Server.objects.filter(active=True)):
-            self.workers.append(ServerRPCClientWorker(id, s, c))
+            [w.start() for w in self.workers]
+            [w.join() for w in self.workers]
 
-        [w.start() for w in self.workers]
-        [w.join() for w in self.workers]
+            logger.info("** Collector RPC client finished. **")
 
-        self.pidfile.release()
-        logger.info(">>> Collector RPC client finished successful.")
+        finally:
+            self.pidfile.release()
+
