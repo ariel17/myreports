@@ -4,3 +4,5 @@ settings.py
 *.log
 *.png
 *.dot
+*.rrd
+gabrielle-*
