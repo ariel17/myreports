@@ -238,30 +238,23 @@ class Command(BaseCommand):
         self.port = options['port']
 
         logger.debug("Openning streams.")
-        if self.stdin:
-            try:
-                self.context.stdin = open(self.stdin, "r")
-            except Exception:
-                logger.exception("Error occurred while trying to open stream "\
-                    "'stdin':")
-                self.context.stdin.close()
-                exit(CONTEXT_ERROR)
+        
+        streams = {
+                "stdin": (self.context.stdin, self.stdin, "r"),
+                "stdout": (self.context.stdout, self.stdout, "a+"),
+                "stderr": (self.context.stderr, self.stderr, "a+")
+                }
 
-        try:
-            self.context.stdout = open(self.stdout, "a+")
-        except Exception:
-            logger.exception("Error occurred while trying to open stream "\
-                "'stdout':")
-            self.context.stdout.close()
-            exit(CONTEXT_ERROR)
-
-        try:
-            self.context.stderr = open(self.stderr, "a+")
-        except Exception:
-            logger.exception("Error occurred while trying to open stream "\
-                "'stderr':")
-            self.context.stderr.close()
-            exit(CONTEXT_ERROR)
+        for stream in streams:
+            (context_var, descriptor, mode) = streams[stream]
+            if descriptor:
+                try:
+                    context_var = open(descriptor, mode)
+                except Exception:
+                    logger.exception("Error occurred while trying to open stream "\
+                        "'%s':" % stream)
+                    context_var.close()
+                    exit(CONTEXT_ERROR)
 
         logger.debug("Assingning signal handlers.")
         self.context.signal_map = {
