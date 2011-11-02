@@ -17,6 +17,9 @@ IGNORE = os.path.join(CURRENT_DIR, ".gitignore")
 
 
 def clean(all=False):
+    """
+    Use .gitignore rules to clean the current project.
+    """
     fd = open(IGNORE, "r")
     for pattern in fd:
         if not all:  # only erase generic patterns, not specific files
