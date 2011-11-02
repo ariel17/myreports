@@ -10,12 +10,17 @@ logger = logging.getLogger(__name__)
 
 class Variable(models.Model):
     """
-    Represents a MySQL variable.
+    It represents a variable as it is.
     """
     name = models.CharField(_("Name"), unique=True, max_length=50,
             help_text="Variable name")
     description = models.CharField(_("Description"), max_length=200,
             blank=True, help_text="What this variable means.")
+    query = models.CharField(_("As query"), max_length=200, blank=True,
+            help_text="Use this query as variable.")
+    current = models.BooleanField(_("Only current values"), default=False,
+            help_text="If `True` only current values will be shown for this "\
+                    "variable.")
 
     def __unicode__(self):
         return u"%s" % self.name
@@ -41,13 +46,6 @@ class Section(WithText):
     """
     variables = models.ManyToManyField(Variable, help_text="Wich variables "\
             "are included to generate this report section.")
-    order = models.PositiveIntegerField(_("Order"), default=0, blank=True,
-            null=True, help_text="Indicates the final position when "\
-                    "presenting the information to the user. If this value "\
-                    "is 0 or NULL, the order will not be garatized.")
-    current = models.BooleanField(_("Only current?"), default=False,
-            help_text="If `True`, it field indicates that this section only "\
-                    "shows the current values for all variables in it.")
 
     def variables_involved(self):
         return u",".join([v.name for v in self.variables.all()])
@@ -67,8 +65,6 @@ class Report(WithText):
     """
     sections = models.ManyToManyField(Section, through='SectionByReport',
             help_text="Sections conforming this report (also body).")
-    with_usage = models.BooleanField(_("With usage?"), default=False,
-            help_text="If `True`, it also collects usage statistics.")
 
     def sections_involved(self):
         return u",".join([s.title for s in self.sections.all()])
