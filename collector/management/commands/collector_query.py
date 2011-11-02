@@ -90,4 +90,3 @@ class Command(BaseCommand):
 
         finally:
             self.pidfile.release()
-
