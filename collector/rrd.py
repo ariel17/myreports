@@ -92,7 +92,7 @@ class RRD:
         # so we take the list of values, convert them to strings and append a colon to each,
         # join the list into a string, and chop the last character to remove the trailing colon    
         # values_args = ''.join([str(value) + ":" for value in values])[:-1]
-        values_args = ":".join(values)
+        values_args = ":".join([str(v) for v in values])
         # build the command line to send to RRDtool
         # cmd_update = ''.join(('rrdtool update ', self.rrd_name, ' N:',)) + values_args     
         cmd_update = "rrdtool update %s N:%s" % (self.rrd_name, values_args)
