@@ -6,6 +6,7 @@ import logging
 import os
 import rrd as rrdtool
 from django.conf import settings
+from math import floor
 
 
 logger = logging.getLogger(__name__)
@@ -110,28 +111,46 @@ class ServerRPCClientWorker(Worker):
         """
         return os.path.join(settings.PROJECT_ROOT, "rrd/s%ds%dv%d.rrd" %
                 (server_id, section_id, variable_id))
+        
 
     def run(self):
         for r in self.server.reports.all():
             for s in r.sections.all():
-                for v in s.variables.all():
-                    logger.info("Contacting RPC about '%s' for %s (%s)" %
+                for v in s.variables.filter(current=False):
+                    logger.debug("Contacting RPC about '%s' for %s (%s)" %
                             (v.name, self.server.name, self.server.ip))
-                    rrd = rrdtool.RRD(self.get_rrd_path(self.server.id, s.id, v.id))
+                    rrd = rrdtool.RRD(self.get_rrd_path(self.server.id, s.id,
+                        v.id))
                     rrd.create_rrd(60, ((v.name, 'COUNTER', 'U', 'U'),))
                     try:
-                        value = self.rpc.call_method(self.server.id, 'show_status',
-                                {'pattern': v.name, })
+                        if v.query:
+                            f = 'doquery'
+                            kwargs = {'sql': v.query, 'parsefunc': dict,}
+                        else:
+                            f = 'show_status'
+                            kwargs = {'pattern': v.name, }
+                        logger.debug("Method: '%s', kwargs: %s" %
+                                (f, repr(kwargs)))
+                        value = self.rpc.call_method(self.server.id, f, kwargs)
                     except:
                         logger.exception("An exception ocurred when "\
                                 "contacting RPC server:")
                         continue
 
-                    logger.info("Query result: %s" % repr(value))
+                    logger.debug("Query result: %s" % repr(value))
+                    
                     if not value or v.name not in value:
                         continue
 
-                    rrd.update(value[v.name])
+                    fv = int(floor(float(value[v.name])))
+                    logger.debug("Floored value: %s=%d" % (v.name, fv))
+
+                    try:
+                        rrd.update(fv)
+                    except rrdtool.RRDException, e:
+                        logger.exception("There was an error trying to "\
+                                "update RRD database:")
+        logger.info("Collected stats for server %s" % self.server.name)
 
 
 class RPCHandler(object):
