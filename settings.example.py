@@ -234,6 +234,10 @@ COLLECTOR_CONF = {
     'pidlock_timeout': 3,  # seconds
 }
 
+RRD_DIR = os.path.join(STATIC_ROOT, 'rrd')
+
+GRAPH_DIR = os.path.join(STATIC_ROOT, 'graph')
+
 if DEBUG:
     try:
         from settings_devel import *
