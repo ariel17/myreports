@@ -1,12 +1,14 @@
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-import threading
 from time import sleep, time
 from math import floor
 import logging
 import os
-import rrd as rrdtool
-from django.conf import settings
+import threading
 from math import floor
+
+from django.conf import settings
+
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+import rrd as rrdtool
 
 
 logger = logging.getLogger(__name__)
@@ -109,9 +111,8 @@ class ServerRPCClientWorker(Worker):
     def get_rrd_path(cls, server_id, section_id, variable_id):
         """
         """
-        return os.path.join(settings.PROJECT_ROOT, "rrd/s%ds%dv%d.rrd" %
+        return os.path.join(settings.RRD_DIR, "s%ds%dv%d.rrd" %
                 (server_id, section_id, variable_id))
-        
 
     def run(self):
         for r in self.server.reports.all():
@@ -146,7 +147,7 @@ class ServerRPCClientWorker(Worker):
                     logger.debug("Floored value: %s=%d" % (v.name, fv))
 
                     try:
-                        rrd.update(fv)
+                        rrd.update((int(time()), fv))
                     except rrdtool.RRDException, e:
                         logger.exception("There was an error trying to "\
                                 "update RRD database:")
