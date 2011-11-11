@@ -9,16 +9,18 @@ server configured previously.
 __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 
 
-from django.core.management.base import BaseCommand
-from django.conf import settings
-from optparse import make_option
-from server.models import Server
-from collector.models import ServerRPCClientWorker
-from jsonrpclib import Server as JSONRPCClient
-from lockfile import FileLock, LockTimeout
 from sys import exit
 import logging
 from os.path import join
+from optparse import make_option
+
+from django.core.management.base import BaseCommand
+from django.conf import settings
+from server.models import Server
+from collector.models import ServerRPCClientWorker
+
+from jsonrpclib import Server as JSONRPCClient
+from lockfile import FileLock, LockTimeout
 
 
 SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_ERROR, RPCSERVER_ERROR = range(4)
