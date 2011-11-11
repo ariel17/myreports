@@ -18,6 +18,7 @@ Downloaded from http://www.goldb.org/rrdpython.html
 
 
 import os
+from time import time
 
 
 class RRD:
@@ -70,6 +71,7 @@ class RRD:
             ' RRA:AVERAGE:0.5:', str(int(120 / interval_mins)), ':800',
             ' RRA:AVERAGE:0.5:', str(int(1440 / interval_mins)), ':800',
             ))
+        print cmd_create
             
         # execute the command as a subprocess and return file objects (child_stdin, child_stdout_and_stderr)
         cmd = os.popen4(cmd_create)
@@ -92,10 +94,11 @@ class RRD:
         # so we take the list of values, convert them to strings and append a colon to each,
         # join the list into a string, and chop the last character to remove the trailing colon    
         # values_args = ''.join([str(value) + ":" for value in values])[:-1]
-        values_args = ":".join([str(v) for v in values])
+        values_args = " ".join([':'.join((str(ts), str(v))) for (ts, v) in values])
         # build the command line to send to RRDtool
         # cmd_update = ''.join(('rrdtool update ', self.rrd_name, ' N:',)) + values_args     
-        cmd_update = "rrdtool update %s N:%s" % (self.rrd_name, values_args)
+        cmd_update = "rrdtool update %s %s" % (self.rrd_name, values_args)
+        print cmd_update
         # execute the command as a subprocess and return file objects (child_stdin, child_stdout_and_stderr)
         cmd = os.popen4(cmd_update)
         cmd_output = cmd[1].read()
@@ -103,6 +106,48 @@ class RRD:
         # check if anything comes back (the only output would be stderr)   
         if len(cmd_output) > 0:
             raise RRDException, "Unable to update the RRD: " + cmd_output
+
+    def graph(self, **kwargs):
+        """
+        Build a graphic based on a rrd previously created.
+
+        Parameters:
+        ***********
+
+        @img: Path to resulting image.
+        @start: Timestamp begining.
+        @end: Timestamp end.
+        @variable: Variable name to draw.
+        @color: Hexadecimal format.
+
+        Colors:
+        *******
+
+        red     #FF0000
+        green   #00FF00
+        blue    #0000FF
+        magenta #FF00FF     (mixed red with blue)
+        gray    #555555     (one third of all components) 
+        """
+
+        p = {'rrd_name': self.rrd_name, }
+        p.update(kwargs)
+
+        if 'end' not in p:
+            p['end'] = int(time())
+
+
+        args = "%(img)s --start %(start)s --end %(end)s "\
+                "--vertical-label %(variable)s "\
+                "DEF:v_%(variable)s=%(rrd_name)s:%(variable)s:AVERAGE "\
+                "LINE2:v_%(variable)s#%(color)s" % p
+        print "rrdtool graph " + args
+
+        cmd = os.popen4("rrdtool graph " + args)
+        cmd_output = cmd[1].read()                 
+
+        if len(cmd_output) > 0:
+            raise RRDException, "Unable to build graphs: " + cmd_output
 
 
 class RRDException(Exception): pass
