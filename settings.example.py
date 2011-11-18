@@ -136,7 +136,7 @@ INSTALLED_APPS = (
     # project apps:
     'server',
     'report',
-    'history'
+    'history',
     'collector',
 )
 
