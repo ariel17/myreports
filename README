@@ -8,25 +8,28 @@ Description
 -----------
 
 This is a personal project realized in Python language and Django v1.3 web
-framework. Basically, it is a statistic collector and customizable reports
-generator for one or more MySQL servers configured.
+framework. Basically consists in a MySQL variable-value collector and a
+customizable report generator for one or more MySQL servers configured.
 
 
 About my problem
 ----------------
 
-The motivation to do this kind of system was, in a few words, bad project
+The motivation to do this kind of system was, in few words, bad project
 managing, inexistence of deployment politics and a missing database
 administration inside an organization where I was working once. Databases were
-created on-demand, inside -any- MySQL server "available", used all the time
-needed, and then forgeted; so for database owner, its life cycle was "Creation
--> Use -> Forget". It becomes a quickly a problem for all that it represents:
-disk space comsumption, access control and overhead.
+almost everywhere, inside -any- MySQL server "at hand" and once they finished
+their life time they pass to oblivion. It becomes a quickly a problem for all
+that it represents: disk space comsumption, access control and overhead.
 
 TODO more description about the problem.
 
 
 About this solution
 -------------------
+
+This odd "Creation -> Use -> Forget" database management politic must be
+corrected.
+
 
 TODO more description about the solution.
