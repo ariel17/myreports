@@ -108,30 +108,86 @@ class ServerRPCClientWorker(Worker):
         self.server = server
         self.rpc = rpc
 
-    def get_rrd_path(cls, server_id, section_id, variable_id):
+    def get_path(cls, server_id, variable_id, sufix='.rrd'):
         """
         """
-        return os.path.join(settings.RRD_DIR, "s%ds%dv%d.rrd" %
-                (server_id, section_id, variable_id))
+        return os.path.join(settings.RRD_DIR, "s%dv%d%s" % (server_id,
+            variable_id, sufix))
+    
+    def set_last_update(self, path, timestamp):
+        """TODO: add some docstring for set_last_update"""
+        with open(path, 'w') as f:
+            f.write(str(timestamp).strip())
+    
+    def get_last_update(self, path):
+        """
+        """
+        with open(path, 'r') as f:
+            return int(f.readline().strip())
+
+    def must_update(self, last_update, now):
+        """TODO: add some docstring for must_update"""
+        diff = now - last_update
+        if diff < settings.CRONTAB_TIME_LAPSE:
+            return (False, diff)
+        return (True, diff)
+
+    def fix_update_time(self, last_update, now):
+        """TODO: add some docstring for fix_update_time"""
+        factor = int(floor((now - last_update) / settings.CRONTAB_TIME_LAPSE))
+        return factor * settings.CRONTAB_TIME_LAPSE + last_update
 
     def run(self):
+        now = int(time())
+        logger.debug("Real time=%d" % now)
         for r in self.server.reports.all():
             for s in r.sections.all():
                 for v in s.variables.filter(current=False):
+                    rrd_path = self.get_path(self.server.id, v.id)
+                    last_update_path = self.get_path(self.server.id, v.id,
+                            '.last-update')
+                    rrd = rrdtool.RRD(rrd_path)
+
+                    if not os.path.exists(rrd_path):
+                        now_start = now - settings.CRONTAB_TIME_LAPSE
+                        try:
+                            rrd.create_rrd(
+                                    settings.CRONTAB_TIME_LAPSE,
+                                    ((v.name, 'COUNTER', 'U', 'U'),),
+                                    start=now_start)
+                        except rrdtool.RRDException:
+                            logger.exception("An exception ocurred when "\
+                                    "creating RRD database:")
+                            continue
+                        self.set_last_update(last_update_path, now_start)
+                        logger.debug("Setted initial time to %d in %s" %
+                                (now_start, last_update_path))
+
+                    last_update = self.get_last_update(last_update_path)    
+                    must_update, sec = self.must_update(last_update, now)
+                    if not must_update:
+                        logger.warn("It isn't time to update: %d seconds "\
+                                "(must at %d seconds)." % (sec, \
+                                settings.CRONTAB_TIME_LAPSE))
+                        continue
+
+                    logger.debug("It is time to update :) %d seconds "\
+                            "(must at %d seconds)." % (sec, \
+                            settings.CRONTAB_TIME_LAPSE))
+
                     logger.debug("Contacting RPC about '%s' for %s (%s)" %
                             (v.name, self.server.name, self.server.ip))
-                    rrd = rrdtool.RRD(self.get_rrd_path(self.server.id, s.id,
-                        v.id))
-                    rrd.create_rrd(60, ((v.name, 'COUNTER', 'U', 'U'),))
+
+                    if v.query:
+                        f = 'doquery'
+                        kwargs = {'sql': v.query, 'parsefunc': dict, }
+                    else:
+                        f = 'show_status'
+                        kwargs = {'pattern': v.name, }
+                    logger.debug("Method: '%s', kwargs: %s" %
+                            (f, repr(kwargs)))
+
                     try:
-                        if v.query:
-                            f = 'doquery'
-                            kwargs = {'sql': v.query, 'parsefunc': dict,}
-                        else:
-                            f = 'show_status'
-                            kwargs = {'pattern': v.name, }
-                        logger.debug("Method: '%s', kwargs: %s" %
-                                (f, repr(kwargs)))
                         value = self.rpc.call_method(self.server.id, f, kwargs)
                     except:
                         logger.exception("An exception ocurred when "\
@@ -139,18 +195,26 @@ class ServerRPCClientWorker(Worker):
                         continue
 
                     logger.debug("Query result: %s" % repr(value))
-                    
+
                     if not value or v.name not in value:
                         continue
 
                     fv = int(floor(float(value[v.name])))
                     logger.debug("Floored value: %s=%d" % (v.name, fv))
 
+                    fixed_time = self.fix_update_time(last_update, now)
+                    logger.debug("Fixed time=%d" % fixed_time)
+
                     try:
-                        rrd.update((int(time()), fv))
+                        rrd.update((fixed_time, fv),)
                     except rrdtool.RRDException, e:
                         logger.exception("There was an error trying to "\
                                 "update RRD database:")
+
+                    self.set_last_update(last_update_path, fixed_time)
+                    logger.debug("Updated time to %d in %s" %
+                            (fixed_time, last_update_path),)
+            
         logger.info("Collected stats for server %s" % self.server.name)
 
 
