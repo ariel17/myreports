@@ -77,11 +77,11 @@ class Command(BaseCommand):
 
     def deduce(self, rrd):
         f = os.path.basename(rrd)
-        return {"server": int(f[1]), "variable": int(f[5]), "img": "%s.png" % f, }
+        return {"server": int(f[1]), "variable": int(f[3]), "img": "%s.png" % f, }
 
     def ts_days(self, day=1):
         """TODO: add some docstring for ts_days"""
-        return int(time.time() - 60 * 60 * days)
+        return int(time.time() - 60 * 60 * day)
 
     def ts_minutes(self, minutes=1):
         return int(time.time() - 60 * minutes)
