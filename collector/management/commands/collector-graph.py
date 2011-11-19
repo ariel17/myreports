@@ -77,8 +77,7 @@ class Command(BaseCommand):
 
     def deduce(self, rrd):
         f = os.path.basename(rrd)
-        return {"server": int(f[1]), "section": int(f[3]),
-                "variable": int(f[5]), "img": "%s.png" % f, }
+        return {"server": int(f[1]), "variable": int(f[5]), "img": "%s.png" % f, }
 
     def ts_days(self, day=1):
         """TODO: add some docstring for ts_days"""
