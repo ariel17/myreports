@@ -155,7 +155,7 @@ class RRD:
         args = "%(img)s --start %(start)s --end %(end)s "\
                 "--vertical-label %(variable)s "\
                 "DEF:v_%(variable)s=%(rrd_name)s:%(variable)s:AVERAGE "\
-                "LINE2:v_%(variable)s#%(color)s" % p
+                "%(format)s:v_%(variable)s#%(color)s" % p
         print "rrdtool graph " + args
 
         cmd = os.popen4("rrdtool graph " + args)
