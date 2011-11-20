@@ -77,7 +77,7 @@ class Command(BaseCommand):
 
     def deduce(self, rrd):
         f = os.path.basename(rrd)
-        return {"server": int(f[1]), "variable": int(f[3]), "img": "%s.png" % f, }
+        return {"server": int(f[1]), "variable": int(f[3]), "file": f, }
 
     def ts_days(self, day=1):
         """TODO: add some docstring for ts_days"""
@@ -90,35 +90,45 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         """
-        logger.info("** Dumping RRDTool graphics **")
+        logger.info("** Collector graphics started **")
         rrds = self.filter_rrds(options['rrd-path'])
         for f_rrd in rrds:
             logger.debug("Processing %s" % f_rrd)
             info = self.deduce(f_rrd)
             v = self.cache.get(Variable, info["variable"])
             rrd = rrdtool.RRD(f_rrd)
+            params = {
+                    'format': 'AREA',
+                    'variable': v.name,
+                    'img': os.path.join(options['img-path'], info['file']),
+                    'color': '0000FF',
+                    }
             try:
                 if options['minutes']:
-                    ts = self.ts_minutes(int(options['minutes']))
-                    img_path = os.path.join(options['img-path'], info['img'])
-                    rrd.graph(img=img_path, start=ts, variable=v.name,
-                            color='0000FF')
+                    params['start'] = self.ts_minutes(int(options['minutes']))
+                    params['img'] = "%s-minutes.png" % params['img'] 
+                    logger.info("Image for minutes in %(img)s" % params)
+                    rrdtool.graph(**params)
                 if options['daily']:
-                    ts = self.ts_days()
-                    rrd.graph(img=info["img"], start=ts, variable=v.name,
-                            color='0000FF')
+                    params['start'] = self.ts_days()
+                    params['img'] = "%s-daily.png" % params['img'] 
+                    logger.info("Image daily in %(img)s" % params)
+                    rrdtool.graph(**params)
                 if options['weekly']:
-                    ts = self.ts_days(7)
-                    rrd.graph(img=info["img"], start=ts, variable=v.name,
-                            color='0000FF')
+                    params['start'] = self.ts_days(7)
+                    params['img'] = "%s-weekly.png" % params['img'] 
+                    logger.info("Image weekly in %(img)s" % params)
+                    rrdtool.graph(**params)
                 if options['monthly']:
-                    ts = self.ts_days(30)
-                    rrdtool.graph(img=info["img"], start=ts, variable=v.name,
-                            color='0000FF')
+                    params['start'] = self.ts_days(30)
+                    params['img'] = "%s-monthly.png" % params['img'] 
+                    logger.info("Image monthly in %(img)s" % params)
+                    rrdtool.graph(**params)
                 if options['yearly']:
-                    ts = self.ts_days(365)
-                    rrdtool.graph(img=info["img"], start=ts, variable=v.name,
-                            color='0000FF')
+                    params['start'] = self.ts_days(365)
+                    params['img'] = "%s-yearly.png" % params['img'] 
+                    logger.info("Image yearly in %(img)s" % params)
+                    rrdtool.graph(**params)
             except:
-                logger.exception("Exception:")
-        logger.info("** Finished **")
+                logger.exception("Exception generating graphics:")
+        logger.info("** Collector graphics finished **")
