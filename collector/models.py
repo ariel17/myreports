@@ -150,29 +150,29 @@ class ServerRPCClientWorker(Worker):
 
                     if not os.path.exists(rrd_path):
                         now_start = now - settings.CRONTAB_TIME_LAPSE
+                        logger.info("Creating new RRD file in %s" % rrd_path)
                         try:
                             rrd.create_rrd(
                                     settings.CRONTAB_TIME_LAPSE,
-                                    ((v.name, 'COUNTER', 'U', 'U'),),
+                                    ((v.name, 'GAUGE', 'U', 'U'),),
                                     start=now_start)
                         except rrdtool.RRDException:
                             logger.exception("An exception ocurred when "\
                                     "creating RRD database:")
                             continue
                         self.set_last_update(last_update_path, now_start)
-                        logger.debug("Setted initial time to %d in %s" %
-                                (now_start, last_update_path))
+                        logger.debug("Setted initial time to %d" % now_start)
 
                     last_update = self.get_last_update(last_update_path)    
                     must_update, sec = self.must_update(last_update, now)
                     if not must_update:
                         logger.warn("It isn't time to update: %d seconds "\
-                                "(must at %d seconds)." % (sec, \
+                                "(must at >=%d seconds)." % (sec, \
                                 settings.CRONTAB_TIME_LAPSE))
                         continue
 
                     logger.debug("It is time to update :) %d seconds "\
-                            "(must at %d seconds)." % (sec, \
+                            "(must at >=%d seconds)." % (sec, \
                             settings.CRONTAB_TIME_LAPSE))
 
                     logger.debug("Contacting RPC about '%s' for %s (%s)" %
@@ -184,8 +184,8 @@ class ServerRPCClientWorker(Worker):
                     else:
                         f = 'show_status'
                         kwargs = {'pattern': v.name, }
-                    logger.debug("Method: '%s', kwargs: %s" %
-                            (f, repr(kwargs)))
+                    logger.debug("Method: '%s', kwargs: %s" % (f, \
+                            repr(kwargs)))
 
                     try:
                         value = self.rpc.call_method(self.server.id, f, kwargs)
@@ -197,6 +197,7 @@ class ServerRPCClientWorker(Worker):
                     logger.debug("Query result: %s" % repr(value))
 
                     if not value or v.name not in value:
+                        logger.warn("Missing required value.")
                         continue
 
                     fv = int(floor(float(value[v.name])))
