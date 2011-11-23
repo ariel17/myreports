@@ -236,7 +236,12 @@ COLLECTOR_CONF = {
 
 RRD_DIR = os.path.join(STATIC_ROOT, 'rrd')
 
-GRAPH_DIR = os.path.join(STATIC_ROOT, 'graph')
+COLLECTOR_APP_DIR = os.path.join(PROJECT_ROOT, 'collector')
+
+GRAPH_DIR = os.path.join(STATIC_ROOT if STATIC_ROOT else COLLECTOR_APP_DIR, \
+        'graph')
+
+CRONTAB_TIME_LAPSE = 60  # seconds
 
 if DEBUG:
     try:
