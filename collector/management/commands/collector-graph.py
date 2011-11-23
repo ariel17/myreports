@@ -10,6 +10,7 @@ import os
 import datetime 
 import time
 import logging
+from sys import exit
 from optparse import make_option
 
 from django.core.management.base import BaseCommand
@@ -21,6 +22,9 @@ import collector.rrd as rrdtool
 
 
 logger = logging.getLogger(__name__)
+
+SUCCESS, MISSING_PARAMETERS_ERROR = range(2)
+DAY_MINUTES = 60 * 24  # sec x min x hs
 
 
 class BasicCache(object):
@@ -79,9 +83,9 @@ class Command(BaseCommand):
         f = os.path.basename(rrd)
         return {"server": int(f[1]), "variable": int(f[3]), "file": f, }
 
-    def ts_days(self, day=1):
+    def ts_days(self, days=1):
         """TODO: add some docstring for ts_days"""
-        return int(time.time() - 60 * 60 * day)
+        return int(time.time() - self.ts_minutes(60 * 24) * days)
 
     def ts_minutes(self, minutes=1):
         return int(time.time() - 60 * minutes)
@@ -91,10 +95,29 @@ class Command(BaseCommand):
         """
         """
         logger.info("** Collector graphics started **")
+
+        periods = {
+                'minutes': options['minutes'],
+                'daily': 1 * DAY_MINUTES, 
+                'weekly': 7 * DAY_MINUTES, 
+                'monthly': 30 * DAY_MINUTES,
+                'yearly': 365 * DAY_MINUTES,
+                }
+        if not any([options[p] for p in periods]):
+            logger.error("Must indicate a period; see `[command] --help`"\
+                    " for a list of options.")
+            exit(MISSING_PARAMETERS_ERROR)
+
         rrds = self.filter_rrds(options['rrd-path'])
+
         for f_rrd in rrds:
             logger.debug("Processing %s" % f_rrd)
-            info = self.deduce(f_rrd)
+            try:
+                info = self.deduce(f_rrd)
+            except:
+                logger.warn("Invalid RRD filename for '%s'" % f_rrd)
+                continue
+
             v = self.cache.get(Variable, info["variable"])
             rrd = rrdtool.RRD(f_rrd)
             params = {
@@ -103,32 +126,16 @@ class Command(BaseCommand):
                     'img': os.path.join(options['img-path'], info['file']),
                     'color': '0000FF',
                     }
+            
             try:
-                if options['minutes']:
-                    params['start'] = self.ts_minutes(int(options['minutes']))
-                    params['img'] = "%s-minutes.png" % params['img'] 
-                    logger.info("Image for minutes in %(img)s" % params)
-                    rrdtool.graph(**params)
-                if options['daily']:
-                    params['start'] = self.ts_days()
-                    params['img'] = "%s-daily.png" % params['img'] 
-                    logger.info("Image daily in %(img)s" % params)
-                    rrdtool.graph(**params)
-                if options['weekly']:
-                    params['start'] = self.ts_days(7)
-                    params['img'] = "%s-weekly.png" % params['img'] 
-                    logger.info("Image weekly in %(img)s" % params)
-                    rrdtool.graph(**params)
-                if options['monthly']:
-                    params['start'] = self.ts_days(30)
-                    params['img'] = "%s-monthly.png" % params['img'] 
-                    logger.info("Image monthly in %(img)s" % params)
-                    rrdtool.graph(**params)
-                if options['yearly']:
-                    params['start'] = self.ts_days(365)
-                    params['img'] = "%s-yearly.png" % params['img'] 
-                    logger.info("Image yearly in %(img)s" % params)
-                    rrdtool.graph(**params)
+                for p in periods:
+                    if options[p]:
+                        params['start'] = self.ts_minutes(periods[p])
+                        params['img'] = "%s-%s.png" % (params['img'], p)
+                        logger.info("Image for %s period in %s" % (p,
+                            params['img']))
+                        rrd.graph(**params)
             except:
                 logger.exception("Exception generating graphics:")
         logger.info("** Collector graphics finished **")
+        exit(SUCCESS)
