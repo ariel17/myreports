@@ -19,6 +19,10 @@ Downloaded from http://www.goldb.org/rrdpython.html
 
 import os
 from time import time
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class RRD:
@@ -80,7 +84,7 @@ class RRD:
             'RRA:AVERAGE:0.5:%s:800' % str(int(120 / interval_mins)),
             'RRA:AVERAGE:0.5:%s:800' % str(int(1440 / interval_mins)),
             ))
-        print cmd_create
+        logger.debug("Executing: `%s`" % cmd_create)
 
         # execute the command as a subprocess and return file objects
         # (child_stdin, child_stdout_and_stderr)
@@ -113,7 +117,8 @@ class RRD:
         # cmd_update = ''.join(('rrdtool update ', self.rrd_name, ' N:',)) +
         #   values_args
         cmd_update = "rrdtool update %s %s" % (self.rrd_name, values_args)
-        print cmd_update
+        logger.debug("Executing: `%s`" % cmd_update)
+
         # execute the command as a subprocess and return file objects
         # (child_stdin, child_stdout_and_stderr)
         cmd = os.popen4(cmd_update)
@@ -156,13 +161,16 @@ class RRD:
                 "--vertical-label %(variable)s "\
                 "DEF:v_%(variable)s=%(rrd_name)s:%(variable)s:AVERAGE "\
                 "%(format)s:v_%(variable)s#%(color)s" % p
-        print "rrdtool graph " + args
+        cmd_graph = "rrdtool graph " + args
+        logger.debug("Executing: `%s`" % cmd_graph)
 
-        cmd = os.popen4("rrdtool graph " + args)
+        cmd = os.popen4(cmd_graph)
         cmd_output = cmd[1].read()
 
-        if len(cmd_output) > 0:
-            raise RRDException("Unable to build graphs: " + cmd_output)
+        if len(cmd_output) > 0 and 'error' in cmd_output.lower():
+            raise RRDException("Exception building graphs: " + cmd_output)
+        else:
+            logger.info("rrdtool output: %s" % cmd_output)
 
 
 class RRDException(Exception):
