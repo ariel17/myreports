@@ -152,7 +152,7 @@ class Command(BaseCommand):
         self.__close_servers()
         self.__close_streams()
         logger.info("Closing context.")
-        self.context.pidfile.release()
+        # self.context.pidfile.release()
         self.context.close()
 
     def reload_config(self):
@@ -181,7 +181,7 @@ class Command(BaseCommand):
         """
         Closes all existent connections to MySQL servers.
         """
-        self.info("Closing all server connections.")
+        logger.info("Closing all server connections.")
         [s.close() for s in self.servers]
         self.servers = []
 
