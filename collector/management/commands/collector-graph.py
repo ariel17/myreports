@@ -24,7 +24,7 @@ import collector.rrd as rrdtool
 logger = logging.getLogger(__name__)
 
 SUCCESS, MISSING_PARAMETERS_ERROR = range(2)
-DAY_MINUTES = 60 * 24  # sec x min x hs
+DAY_MINUTES = 60 * 24
 
 
 class BasicCache(object):
@@ -97,7 +97,7 @@ class Command(BaseCommand):
         logger.info("** Collector graphics started **")
 
         periods = {
-                'minutes': options['minutes'],
+                'minutes': float(options['minutes']),
                 'daily': 1 * DAY_MINUTES, 
                 'weekly': 7 * DAY_MINUTES, 
                 'monthly': 30 * DAY_MINUTES,
