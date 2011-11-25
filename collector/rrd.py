@@ -42,7 +42,7 @@ class RRD:
         """
         self.rrd_name = rrd_name
 
-    def create_rrd(self, interval, data_sources, start=None):
+    def create_rrd(self, interval, data_sources, start=None, averages=None):
         """
         Create a new RRD.
 
@@ -76,14 +76,14 @@ class RRD:
                 heartbeat, str(ds_min), str(ds_max)))
 
         # build the command line to send to RRDtool
-        cmd_create = ' '.join((
-            'rrdtool create ', self.rrd_name, '--start %s' % str(start) if start
-            else '', '--step', interval, ds_string,
-            'RRA:AVERAGE:0.5:1:%s' % str(int(4000 / interval_mins)),
-            'RRA:AVERAGE:0.5:%s:800' % str(int(30 / interval_mins)),
-            'RRA:AVERAGE:0.5:%s:800' % str(int(120 / interval_mins)),
-            'RRA:AVERAGE:0.5:%s:800' % str(int(1440 / interval_mins)),
-            ))
+        parts = ['rrdtool create ', self.rrd_name,
+                '--start %s' % str(start) if start else '', 
+                '--step %s' % str(interval), ds_string, ]
+
+        for a in (averages if averages else (('0.5', '1', '10'),)):
+            parts.append('RRA:AVERAGE:%s:%s:%s' % (a[0], a[1], a[2]))
+
+        cmd_create = ' '.join(parts)
         logger.debug("Executing: `%s`" % cmd_create)
 
         # execute the command as a subprocess and return file objects

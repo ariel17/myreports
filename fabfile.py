@@ -10,6 +10,7 @@ __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 from fabric.api import *
 from fabric.colors import red, green
 import os
+import settings
 
 
 CURRENT_DIR = os.path.realpath(os.path.dirname(__file__))
@@ -27,3 +28,13 @@ def clean(all=False):
                 continue
         local("/usr/bin/find -name '%s' -delete" % pattern.strip())
     print green("Project cleaned.")            
+
+
+def create_dirs():
+    """
+    TODO: add some docstring for check_directories
+    """
+    for d in [settings.GRAPH_DIR, settings.RRD_DIR]:
+        if not os.path.exists(d):
+            os.makedirs(d)
+            print "Created dir '%s'" % d
