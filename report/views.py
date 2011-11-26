@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def show_report(request, id):
+def show_report(request, rbs_id):
     """
     """
     rs = get_object_or_404(ReportByServer, id=id)
@@ -39,11 +39,11 @@ def show_report(request, id):
     return render_to_response('direct.html', params)
 
 
-def show_section(request, reportbyserver_id, section_id):
+def show_section(request, rbs_id, s_id):
     """
     """
-    s = get_object_or_404(Section, id=section_id)
-    rs = get_object_or_404(ReportByServer, id=reportbyserver_id)
+    s = get_object_or_404(Section, id=s_id)
+    rs = get_object_or_404(ReportByServer, id=rbs_id)
     params = {
             'name': 'section',
             'title': s.title,
