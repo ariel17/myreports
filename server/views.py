@@ -8,10 +8,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def show_all_reports(request, ip=None, id=None):
+def show_reports(request, ip=None, id=None, name=None):
     """
     """
-    server = get_object_or_404(Server, **({'ip': ip} if ip else {'id': id}))
+
+    params = {'ip': ip} if ip else ({'id': id} if id else {'name': name})
+    server = get_object_or_404(Server, **params)
 
     params = {
             'server': server,
@@ -21,18 +23,14 @@ def show_all_reports(request, ip=None, id=None):
     }
     logger.debug("Fetching reports.")
     for r in server.reports.all():
-        uuid = ReportByServer.objects.get(server=server, report=r).uuid
-        params['reports'][r.id] = r.get_absolute_url(uuid)
+        rbs = ReportByServer.objects.get(server=server, report=r)
+        params['reports'][r.id] = r.get_absolute_url()
         for s in r.sections.all():
             logger.debug("Section: %s" % s)
             variables = s.variables.all()
             logger.debug("Variables in this section: %s" % repr(variables))
-            if s.current:
-                logger.debug("Fetching current values.")
-            else:
-                logger.debug("Fetching history.")
             params['sections'][s.id] = {
-                    'permalink': s.get_absolute_url(uuid)
+                    'permalink': s.get_absolute_url(rbs.id)
             }
     logger.debug("Params: %s" % repr(params))
 
