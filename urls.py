@@ -9,6 +9,21 @@ api = Api(api_name='v1')
 api.register(ServerResource())
 api.register(DatabaseResource())
 
+"""
+TODO:
+
+   Fix urls to this pattern:
+
+   /direct/server/0123-4567-89AB/
+   
+   /direct/report/0123-4567-89AB/
+   
+   /reports/section/1/
+   /reports/section/section-1/
+   /reports/section/1/
+   /reports/server/1/report-1/1/
+   /direct/section/0123-4567-89AB/
+"""
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -23,7 +38,9 @@ urlpatterns = patterns('',
 
     # application patterns
 
-    url(r'^server/', include('server.urls')),
+    url(r'^reports/server/', include('server.urls')),
+
+    url(r'^reports/report/', include('report.urls')),
 
     url(r'^api/', include(api.urls)),
 
