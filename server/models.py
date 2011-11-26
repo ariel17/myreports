@@ -134,7 +134,7 @@ class Server(MySQLHandler):
     MySQL Server instance wich will be used to generate reports.
     """
     active = models.BooleanField(_("Is active"), default=True)
-    name = models.CharField(_("Name"), max_length=100, \
+    name = models.CharField(_("Name"), max_length=50, \
             help_text="Server name or ID.")
     reports = models.ManyToManyField(Report, through='ReportByServer',
             help_text="Selected reports for this server")
@@ -148,6 +148,10 @@ class Server(MySQLHandler):
 
     def __unicode__(self):
         return u"%s" % self.name
+
+    @models.permalink                           
+    def url(self):
+        return ('show_all_reports', (self.id,))
 
     @models.permalink
     def get_absolute_url(self):
