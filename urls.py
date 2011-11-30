@@ -20,8 +20,7 @@ TODO:
    
    /reports/section/1/
    /reports/section/section-1/
-   /reports/section/1/
-   /reports/server/1/report-1/1/
+   /reports/section/1/report-1/server-1/
    /direct/section/0123-4567-89AB/
 """
 
@@ -40,7 +39,7 @@ urlpatterns = patterns('',
 
     url(r'^reports/server/', include('server.urls')),
 
-    url(r'^reports/report/', include('report.urls')),
+    url(r'^reports/', include('report.urls')),
 
     url(r'^api/', include(api.urls)),
 
