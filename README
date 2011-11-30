@@ -1,32 +1,54 @@
-* MyReports * Statistic reports for MySQL servers
-=================================================
-
-By Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)
-
+MyReports - Statistic reports for MySQL Servers
+===============================================
 
 Description
 -----------
 
 This is a personal project realized in Python language and Django v1.3 web
-framework. Basically, it is a statistic collector and customizable reports
-generator for one or more MySQL servers configured.
+framework. Basically consists in a MySQL variable-value collector and a
+customizable report generator for one or more MySQL servers configured.
 
 
-About my problem
-----------------
+Installation
+------------
 
-The motivation to do this kind of system was, in a few words, bad project
-managing, inexistence of deployment politics and a missing database
-administration inside an organization where I was working once. Databases were
-created on-demand, inside -any- MySQL server "available", used all the time
-needed, and then forgeted; so for database owner, its life cycle was "Creation
--> Use -> Forget". It becomes a quickly a problem for all that it represents:
-disk space comsumption, access control and overhead.
+1) Get the code from the Github repository:
 
-TODO more description about the problem.
+    ~$ git clone git@github.com:ariel17/myreports.git
+
+2) Create a virtual environment for Python using virtualenv
+   [http://www.virtualenv.org/] and virtualenvwrapper
+   [http://www.doughellmann.com/projects/virtualenvwrapper/]:
+
+    ~$ mkvirtualenv --no-site-packages --distribute myreports
+
+3) Install dependences and RRDTool [http://oss.oetiker.ch/rrdtool/]:
+
+    (myreports)~/myreports$ pip install -r deploy/requeriments/devel.txt
+
+    (myreports)~/myreports$ sudo apt-get install rrdtool  # debian/ubuntu
+
+5) Configure settings.py using settings.example.py as base file.
+
+6) Adjust your prefered database and sync:
+
+     (myreports)~/myreports$ python manage.py syncdb
+
+7) Run the test server, the collector RPC daemon, the RPC client or the image
+   creator:
+
+    (myreports)~/myreports$ python manage.py runserver 0.0.0.0:8080  # /admin/
+
+    (myreports)~/myreports$ python manage.py collector_rpc --port 5000
+
+    (myreports)~/myreports$ python manage.py collector_query --port 5000
+
+    (myreports)~/myreports$ python manage.py collector-graph
+
+    You can always check for --help .
 
 
-About this solution
--------------------
+Some day, everything will be easier :)
 
-TODO more description about the solution.
+--
+Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)

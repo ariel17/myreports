@@ -136,7 +136,6 @@ INSTALLED_APPS = (
     # project apps:
     'server',
     'report',
-    'history',
     'collector',
 )
 
@@ -234,6 +233,15 @@ COLLECTOR_CONF = {
     'port': 8000,
     'pidlock_timeout': 3,  # seconds
 }
+
+RRD_DIR = os.path.join(STATIC_ROOT, 'rrd')
+
+COLLECTOR_APP_DIR = os.path.join(PROJECT_ROOT, 'collector')
+
+GRAPH_DIR = os.path.join(STATIC_ROOT if STATIC_ROOT else COLLECTOR_APP_DIR, \
+        'graph')
+
+CRONTAB_TIME_LAPSE = 60  # seconds
 
 if DEBUG:
     try:

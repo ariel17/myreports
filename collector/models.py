@@ -1,9 +1,10 @@
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-from history.models import SnapshotFactory
-import threading
-from time import sleep, time
-from math import floor
+import os
 import logging
+import threading
+
+from django.conf import settings
+
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 
 
 logger = logging.getLogger(__name__)
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
     """
     """
+    MAX_CHUNK_SIZE = 10 * 1024 * 1024
 
     def do_GET(self):
         """
@@ -27,7 +29,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
         self.wfile.write(response)
         self.wfile.flush()
         self.connection.shutdown(1)
-    
+
     def do_POST(self):
         """
         """
@@ -36,12 +38,12 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
                     "address.")
             self.report_404()
             return
+
         try:
-            max_chunk_size = 10*1024*1024
             size_remaining = int(self.headers["content-length"])
             L = []
             while size_remaining:
-                chunk_size = min(size_remaining, max_chunk_size)
+                chunk_size = min(size_remaining, self.MAX_CHUNK_SIZE)
                 L.append(self.rfile.read(chunk_size))
                 size_remaining -= len(L[-1])
             data = ''.join(L)
@@ -50,7 +52,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
             response = self.server._marshaled_dispatch(data)
             self.send_response(200)
             logger.info("[HTTP 200] Request accepted.")
-        except Exception, e:
+        except Exception:
             logger.exception("[HTTP 500] Internal Server Error:")
             self.send_response(500)
             err_lines = traceback.format_exc().splitlines()
@@ -73,7 +75,6 @@ class Worker(threading.Thread):
     This is a generic threaded worker.
     """
 
-    server = None
     running = True
 
     def __init__(self, id):
@@ -88,41 +89,6 @@ class Worker(threading.Thread):
 
     def run(self):
         raise NotImplementedError("Must implement this method.")
-
-
-class ServerRPCClientWorker(Worker):
-    """
-    This class wraps the Server class model with threading functionallity, to
-    check the values of the variables in its reports.
-    """
-    server = None
-    rpc = None
-
-    def __init__(self, id, server, rpc):
-        super(ServerRPCClientWorker, self).__init__(id)
-        self.server = server
-        self.rpc = rpc
-
-    def run(self):
-        try:
-            logger.info("Collecting info for server %s" % self.server)
-            variables = self.server.get_variables()
-            logger.debug("Variables to check: %s" % variables)
-
-            # check values for all variables of all reports assigned.
-            for v in variables:
-                # only numeric status variables or 'custom' type variables
-                if v.data_type not in 'na':
-                    continue
-
-                s = SnapshotFactory.take_snapshot(self.server, self.rpc,
-                        variable=v, must_save=True)
-                logger.info("Taked snapshot: %s" % s)
-
-        except Exception:
-            logger.exception("Error occoured when contacting RPC server:")
-        finally:
-            logger.info("Collect done.")
 
 
 class RPCHandler(object):

@@ -11,14 +11,15 @@ class DatabaseInline(admin.TabularInline):
 
 
 class ServerAdmin(admin.ModelAdmin):
-    list_display = ("name", "active", "ip", "port", "available_reports")
+    list_display = ("name", "active", "ip", "port", "available_reports", \
+            "url")
     list_filter = ("port", "active")
     ordering = ("name", "ip", "active")
     inlines = [DatabaseInline, ReportByServerInline, ]
 
 
 class ReportByServerAdmin(admin.ModelAdmin):
-    list_display = ("server", "report", "order", "uuid")
+    list_display = ("server", "report", "order")
 
 
 class DatabaseAdmin(admin.ModelAdmin):

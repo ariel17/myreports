@@ -147,10 +147,13 @@ class Command(BaseCommand):
         """
         Handle to all task that must be made to close clean and fast.
         """
-        logger.info("Tearing down.")
-        logger.debug("Stopping JSON RPC server.")
+        logger.info(">> Tearing down.")
         self.__stop_rpc()
         self.__close_servers()
+        self.__close_streams()
+        logger.info("Closing context.")
+        # self.context.pidfile.release()
+        self.context.close()
 
     def reload_config(self):
         """
@@ -178,7 +181,7 @@ class Command(BaseCommand):
         """
         Closes all existent connections to MySQL servers.
         """
-        self.info("Closing all server connections.")
+        logger.info("Closing all server connections.")
         [s.close() for s in self.servers]
         self.servers = []
 
@@ -201,6 +204,18 @@ class Command(BaseCommand):
         if self.rpc:
             self.rpc.shutdown()
 
+    def __close_streams(self):
+        """
+        Closes opened standard steams.
+        """
+        logger.info("Closing opened streams.")
+        for s in (self.context.stdin, self.context.stdout,
+                self.context.stderr):
+            try:
+                s.close()
+            except:
+                pass
+
     def handle(self, *args, **options):
         """
         Takes the options and starts a daemon context from them.
@@ -211,59 +226,47 @@ class Command(BaseCommand):
                 --stdout=/var/log/cb/links.out --stderr=/var/log/cb/links.err
 
         """
-
         # Making basic checks for some parameters
 
-        logger.debug("Checking required parameters.")
+        # Checking required parameters
         for param in ['stdout', 'stderr', 'pidfile']:
             if not options.get(param, None):
                 logger.error("Invalid value for parameter '%s'. Use -h to "\
                         "read help." % param)
                 exit(CONTEXT_ERROR)
 
-        # collecting parameters
-
-        self.context.chroot_directory = options['chroot_directory']
-        self.context.working_directory = options['working_directory']
-        self.context.umask = options['umask']
-        self.context.detach_process = options['detach_process']
-        self.context.prevent_core = options['prevent_core']
-        self.stdin = options['stdin']
-        self.stdout = options['stdout']
-        self.stderr = options['stderr']
-        self.pidfile = options['pidfile']
-        self.uid = options['uid']
-        self.gid = options['gid']
         self.host = options['host']
         self.port = options['port']
 
-        logger.debug("Openning streams.")
-        if self.stdin:
+        # Openning streams
+        if options['stdin']:
             try:
-                self.context.stdin = open(self.stdin, "r")
-            except Exception:
+                self.context.stdin = open(options['stdin'], "r")
+            except Exception:                                                                          
                 logger.exception("Error occurred while trying to open stream "\
                     "'stdin':")
                 self.context.stdin.close()
                 exit(CONTEXT_ERROR)
 
-        try:
-            self.context.stdout = open(self.stdout, "a+")
-        except Exception:
-            logger.exception("Error occurred while trying to open stream "\
-                "'stdout':")
-            self.context.stdout.close()
-            exit(CONTEXT_ERROR)
+        if options['stdout']:
+            try:
+                self.context.stdout = open(options['stdout'], "a+")
+            except Exception:                                                                          
+                logger.exception("Error occurred while trying to open stream "\
+                    "'stdout':")
+                self.context.stdout.close()
+                exit(CONTEXT_ERROR)
+        
+        if options['stderr']:
+            try:
+                self.context.stderr = open(options['stderr'], "a+")
+            except Exception:                                                                          
+                logger.exception("Error occurred while trying to open stream "\
+                    "'stderr':")
+                self.context.stderr.close()
+                exit(CONTEXT_ERROR)
 
-        try:
-            self.context.stderr = open(self.stderr, "a+")
-        except Exception:
-            logger.exception("Error occurred while trying to open stream "\
-                "'stderr':")
-            self.context.stderr.close()
-            exit(CONTEXT_ERROR)
-
-        logger.debug("Assingning signal handlers.")
+        # Assingning signal handlers.
         self.context.signal_map = {
                 signal.SIGTERM: self.tear_down,
                 signal.SIGHUP: 'terminate',
@@ -272,6 +275,15 @@ class Command(BaseCommand):
         }
 
         logger.debug("Trying to open daemon context.")
+        self.context.chroot_directory = options['chroot_directory']
+        self.context.working_directory = options['working_directory']
+        self.context.umask = options['umask']
+        if options['uid']:
+            self.context.uid = options['uid']
+        if options['gid']:
+            self.context.gid = options['gid']
+        self.context.detach_process = options['detach_process']
+        self.context.prevent_core = options['prevent_core']
         try:
             self.context.open()
         except daemon.daemon.DaemonOSEnvironmentError, e:
@@ -283,46 +295,42 @@ class Command(BaseCommand):
         logger.debug("Finishing loader process.")
         exit(SUCCESS)
 
-    def log_params(self):
-        logger.debug("'chroot_directory': %s" % self.context.chroot_directory)
-        logger.debug("'working_directory': %s" %
-                self.context.working_directory)
-        logger.debug("'umask': %d" % self.context.umask)
-        logger.debug("'detach_process': %s" % self.context.detach_process)
-        logger.debug("'prevent_core': %s" % self.context.prevent_core)
-        logger.debug("'stdin': %s" % self.stdin)
-        logger.debug("'stdout': %s" % self.stdout)
-        logger.debug("'stderr': %s" % self.stderr)
-        logger.debug("'pidfile': %s" % self.pidfile)
-        logger.debug("'uid': %s" % self.uid)
-        logger.debug("'gid': %s" % self.gid)
-        logger.debug("'host': %s" % self.host)
-        logger.debug("'port': %s" % self.port)
+    def log_params(self, options):
+        """
+        TODO: Add a description.
+        """
+        for param in options:
+            value = options[param]
+            if not value:
+                continue
+            logger.debug("'%s' = '%s'" % (param, value))
 
     def handle_daemon(self, *args, **options):
         """
         Perform the command's actions in the given daemon context
         """
         logger.info(">>> Daemon initialized.")
-
-        self.log_params()
+        self.log_params(options)
 
         #Make pid lock file
-        logger.debug("Locking PID file %s" % self.pidfile)
-        self.context.pidfile = FileLock(self.pidfile)
+        pid = options["pidfile"]
+        logger.debug("Locking PID file %s" % pid)
+        self.context.pidfile = FileLock(pid)
         if self.context.pidfile.is_locked():
             logger.error("PID file is already locked (other process "\
                 "running?).")
             exit(ALREADY_RUNNING_ERROR)
         try:
-            self.context.pidfile.acquire(
-                    timeout=settings.COLLECTOR_CONF['pidlock_timeout'])
-        except LockTimeout:
-            self.context.pidfile.release()
-            logger.exception("Can't lock PID file:")
-            logger.info(">>> Daemon finished with errors.")
-            exit(CONTEXT_ERROR)
+            try:
+                self.context.pidfile.acquire(
+                        timeout=settings.COLLECTOR_CONF['pidlock_timeout'])
+            except LockTimeout:
+                logger.exception("Can't lock PID file:")
+                logger.info(">>> Daemon finished with errors.")
+                exit(CONTEXT_ERROR)
 
-        self.__start_rpc()
+            self.__start_rpc()
+            logger.info(">>> Core daemon finished.")
 
-        logger.info(">>> Core daemon finished.")
+        finally:
+                self.tear_down()

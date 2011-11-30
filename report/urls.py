@@ -13,7 +13,31 @@ from views import show_report, show_section
 
 urlpatterns = patterns('',
 
-    url(r'^(?P<uuid>[\w-]+)/$', show_report, name='show_report'),
+        url(r'^report/(?P<id>\d+)/$', show_all_reports, name='show_servers'),
 
-    url(r'^(?P<uuid>[\w-]+)/(?P<id>\d+)/$', show_section, name='show_section'),
+        url(r'^report/(?P<name>[\w\-]+)/$', show_all_reports,
+            name='show_servers'),
+
+        url(r'^report/(?P<id>\d+)/(?P<server_id>\d+)/$', show_all_reports,
+            name='show_report_server'),
+                                                                             
+        url(r'^report/(?P<name>[\w\-]+)/(?P<server_id>\d+)/$',
+            show_all_reports, name='show_report_server'),
+
+        url(r'^report/(?P<id>\d+)/(?P<ip>[0-9\.]{7,15})/$', show_all_reports,
+            name='show_report_server'),                  
+                                                                             
+        url(r'^report/(?P<name>[\w\-]+)/(?P<ip>[0-9\.]{7,15})/$',
+            show_all_reports, name='show_report_server'),
+
+        url(r'^report/(?P<id>\d+)/(?P<server_name>[\w\-]+)/$',
+            show_all_reports, name='show_report_server'),                  
+
+        url(r'^report/(?P<name>[\w\-]+)/(?P<server_name>[\w\-]+)/$',
+            show_all_reports, name='show_report_server'),
+
+        # url(r'^report/(?P<rbs_id>\d+)/$', show_report, name='show_report'),
+
+        # url(r'^report/(?P<rbs_id>\d+)/(?P<s_id>\d+)/$', show_section,
+        #     name='show_section'),
 )

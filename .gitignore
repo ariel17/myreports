@@ -1,6 +1,11 @@
 *.pyc
 settings.py
 .*.swp
+.*.swo
 *.log
 *.png
 *.dot
+*.rrd
+*.last-update
+gabrielle-*
+natalie-*

@@ -1,6 +1,5 @@
 from django.db import models
 from report.models import Report
-from utils.fields import UUIDField
 from django.utils.translation import ugettext as _
 import settings
 import logging
@@ -135,7 +134,7 @@ class Server(MySQLHandler):
     MySQL Server instance wich will be used to generate reports.
     """
     active = models.BooleanField(_("Is active"), default=True)
-    name = models.CharField(_("Name"), max_length=100, \
+    name = models.CharField(_("Name"), max_length=50, \
             help_text="Server name or ID.")
     reports = models.ManyToManyField(Report, through='ReportByServer',
             help_text="Selected reports for this server")
@@ -147,20 +146,12 @@ class Server(MySQLHandler):
         """
         return u",".join([r.title for r in self.reports.all()])
 
-    def get_variables(self):
-        """
-        Returns all variables associated to this server through reports and its
-        sections.
-        """
-        variables = set()
-        for r in self.reports.all():
-            for s in r.sections.all():
-                for v in s.variables.all():
-                    variables.add(v)
-        return variables
-
     def __unicode__(self):
         return u"%s" % self.name
+
+    @models.permalink                           
+    def url(self):
+        return ('show_all_reports', (self.id,))
 
     @models.permalink
     def get_absolute_url(self):
@@ -204,11 +195,10 @@ class ReportByServer(models.Model):
             null=True, help_text="Indicates the final position when "\
                     "presenting the information to the user. If this value "\
                     "is 0 or NULL, the order will not be garatized.")
-    uuid = UUIDField(editable=False)
 
     def __unicode__(self):
-        return u"ReportByServer report_id=%d server_id=%d order=%d uuid=%s" % \
-                (self.report.id, self.server.id, self.order, self.uuid)
+        return u"ReportByServer report_id=%d server_id=%d order=%d" % \
+                (self.report.id, self.server.id, self.order)
 
 
 class Database(models.Model):
