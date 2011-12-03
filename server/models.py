@@ -151,11 +151,11 @@ class Server(MySQLHandler):
 
     @models.permalink                           
     def url(self):
-        return ('show_all_reports', (self.id,))
+        return ('all_reports_id', (self.id,))
 
     @models.permalink
     def get_absolute_url(self):
-        return ('show_all_reports', (self.id,))
+        return ('server_id', (self.id,))
 
 
 class ServerFactory:
