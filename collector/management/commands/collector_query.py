@@ -71,8 +71,19 @@ class RPCClientWorker(Worker):
         return (True, diff)
 
     def fix_update_time(self, last_update, now):
-        """TODO: add some docstring for fix_update_time"""
-        factor = int(floor((now - last_update) / settings.CRONTAB_TIME_LAPSE))
+        """
+        Changes the timestamp to use as time mark for update. Since it doesn't
+        now how many time had passed (maybe the server was down for a few hours
+        or not) must determine the closer timestamp passed.
+
+        Parameteres:
+        @last_update (int): last timestamp saved.
+        @now (int): actual timestamp obteined.
+
+        Returns:
+        Int: The closer timestamp mark to update.
+        """
+        factor = (now - last_update) / settings.CRONTAB_TIME_LAPSE
         return factor * settings.CRONTAB_TIME_LAPSE + last_update
 
     def run(self):
