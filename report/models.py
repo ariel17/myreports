@@ -54,8 +54,8 @@ class Section(WithText):
         return u"%s" % self.title
 
     @models.permalink
-    def get_absolute_url(self, reportbyserver_id):
-        return ('show_section', (reportbyserver_id, self.id,))
+    def get_absolute_url(self):
+        return ('show_section_id', self.id)
 
 
 class Report(WithText):
@@ -74,7 +74,7 @@ class Report(WithText):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('show_report', (self.id,))
+        return ('show_report_id', (self.id,))
 
 
 class SectionByReport(models.Model):
