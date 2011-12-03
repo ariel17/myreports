@@ -37,9 +37,11 @@ urlpatterns = patterns('',
 
     # application patterns
 
-    url(r'^reports/server/', include('server.urls')),
+    url(r'^report/servers/', include('server.urls')),
 
-    url(r'^reports/', include('report.urls')),
+    url(r'^report/reports/', include('report.report_urls')),
+
+    url(r'^report/sections/', include('report.section_urls')),
 
     url(r'^api/', include(api.urls)),
 
