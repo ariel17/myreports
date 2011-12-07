@@ -45,6 +45,4 @@ urlpatterns = patterns('',
 
     url(r'^api/', include(api.urls)),
 
-    url(r'^direct/', include('report.urls')),
-
 )
