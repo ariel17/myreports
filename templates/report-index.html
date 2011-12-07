@@ -1,0 +1,14 @@
+{% block report-index %}
+    <ul>
+        {% for r in s.reports %}
+            <li>
+                <a href="#report-{{ s.server.id }}-{{ r.report.id }}">Report {{ r.report.title }}</a>
+                <ul>
+                    {% for se in r.sections %}
+                        <li><a href="#section-{{ s.server.id }}-{{ r.report.id }}-{{ se.section.id }}">Section {{ se.section.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}    
