@@ -55,7 +55,7 @@ class Section(WithText):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('show_section_id', self.id)
+        return ('show_section_id', (self.id,))
 
 
 class Report(WithText):
