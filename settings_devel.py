@@ -1,11 +1,15 @@
 # Django settings for myreports project on devel stage.
+import os
+
+
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'myreports',
-        'USER': 'myreports',
-        'PASSWORD': 'myreports',
+        'USER': 'root',
+        'PASSWORD': '',
         'HOST': '',
         'PORT': '',
     }
@@ -51,7 +55,6 @@ INSTALLED_APPS = (
     'tastypie',
     'server',
     'report',
-    'history',
     'collector',
 )
 
