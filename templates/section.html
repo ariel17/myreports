@@ -1,54 +1,20 @@
 {% block section %}
 
-    <div id="section-{{ server.id }}-{{ report.id }}-{{ section.id }}" name="section-{{ server.id }}-{{ report.id }}-{{ section.id }}">
+    <div id="section-{{ s.server.id }}-{{ r.report.id }}-{{ se.section.id }}" name="section-{{ s.server.id }}-{{ r.report.id }}-{{ se.section.id }}">
         <div id="section_title" name="section_title">
-            <h2>
-                <a name="section-{{ server.id }}-{{ report.id }}-{{ section.id }}">Section {{ section.title }}</a>&nbsp;
-                {% for sectionid, dict in sections.items %}
-                    {% if sectionid == section.id %}
-                        {% for key, content in dict.items %}
-                            {% if key == "permalink" %}
-                                <a href="{{ content }}">[direct link]</a>
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
-                {% endfor %}
-            </h2>
+            <h3>
+                <a name="section-{{ s.server.id }}-{{ r.report.id }}-{{ se.section.id }}">Section {{ se.section.title }}</a>&nbsp;
+                <a href="{{ se.permalink }}">[direct link]</a>
+            </h3>
         </div>
 
         <div id="section_content" name="section_content">
-            <table border="0">
-                <tr>
-                    <td><b>Variable</b></td>
-                    <td>&nbsp;</td>
-                    <td><b>Value</b></td>
-                    {% if not section.current %}
-                        <td>&nbsp;</td>
-                        <td><b>Date</b></td>
-                    {% endif %}
-                </tr>
-                {% for sectionid, dict in sections.items %}
-                    {% if sectionid == section.id %}
-                        {% for key, content in dict.items %}
-                            {% if key == "snapshots" %}
-                                {% for ss in content %}
-                                    {% if ss.server.id == server.id %}
-                                        <tr>
-                                            <td>{{ ss.variable.name }}</td>
-                                            <td>&nbsp;</td>
-                                            <td>{{ ss.value }}</td>
-                                            {% if not section.current %}
-                                                <td>&nbsp;</td>
-                                                <td>{{ ss.time }}</td>
-                                            {% endif %}
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
+            {% for v in se.variables %}
+                {% for key, value in v.items %}
+                <div id="{{ key }}" name="{{ key }}"><img src="{{ STATIC_URL }}graph/{{ value }}" /></div>
+                    
                 {% endfor %}
-            </table>                        
+            {% endfor %}
         </div>
     </div>        
 
