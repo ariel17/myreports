@@ -151,7 +151,7 @@ class Server(MySQLHandler):
 
     @models.permalink                           
     def url(self):
-        return ('all_reports_id', (self.id,))
+        return ('server_id', (self.id,))
 
     @models.permalink
     def get_absolute_url(self):
