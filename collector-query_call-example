@@ -1,0 +1,10 @@
+#!/bin/bash -x
+
+PROJECT_NAME=myreports
+PROJECT_DIR=~/develop/$PROJECT_NAME
+PYTHON=/var/lib/virtualenv/$PROJECT_NAME/bin/python
+COMMAND=collector-query
+HOST=127.0.0.1
+PORT=8001
+
+$PYTHON $PROJECT_DIR/manage.py $COMMAND --host $HOST --port $PORT

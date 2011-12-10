@@ -1,0 +1,11 @@
+#!/bin/bash -x
+
+PROJECT_NAME=myreports
+PROJECT_DIR=~/develop/$PROJECT_NAME
+PYTHON=/var/lib/virtualenv/$PROJECT_NAME/bin/python
+COMMAND=collector-graph
+RRD_DIR=$PROJECT_DIR/rrd
+MINUTES=10
+
+$PYTHON $PROJECT_DIR/manage.py $COMMAND --rrd-path=$RRD_DIR --minutes=$MINUTES \
+    --daily --weekly --monthly --yearly
