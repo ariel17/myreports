@@ -4,6 +4,7 @@ from report.views import show_section
 
 from tastypie.api import Api
 from server.api import ServerResource, DatabaseResource
+from server.views import test_connection
 
 api = Api(api_name='v1')
 api.register(ServerResource())
@@ -42,6 +43,8 @@ urlpatterns = patterns('',
     url(r'^report/reports/', include('report.report_urls')),
 
     url(r'^report/sections/', include('report.section_urls')),
+
+    url(r'^server/test/$', test_connection, name='test_connection'),
 
     url(r'^api/', include(api.urls)),
 
