@@ -1,0 +1,15 @@
+#!/bin/bash -x
+
+PROJECT_NAME=myreports
+PROJECT_DIR=~/develop/$PROJECT_NAME
+PYTHON=/var/lib/virtualenv/$PROJECT_NAME/bin/python
+COMMAND=collector-rpc
+LOG_DIR=/tmp
+PID_DIR=/tmp
+HOST=127.0.0.1
+PORT=8001
+
+$PYTHON $PROJECT_DIR/manage.py $COMMAND --host $HOST --port $PORT \
+    --stdout=$LOG_DIR/$COMMAND-out.log --stderr=$LOG_DIR/$COMMAND-err.log \
+    --pidfile=$PID_DIR/$COMMAND.pid
+    
