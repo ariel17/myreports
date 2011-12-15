@@ -25,6 +25,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class RRDException(Exception):
+    pass
+
+
+class TimeLapseException(Exception):
+    """
+    """
+    def __init__(self, value):
+        self.parameter = value
+
+    def __str__(self):
+        return repr(self.parameter)
+
+
 class RRD:
     """
     Data access layer that provides a wrapper for RRDtool.
@@ -173,5 +187,119 @@ class RRD:
             logger.info("rrdtool output: %s" % cmd_output)
 
 
-class RRDException(Exception):
-    pass
+class RRDWrapper(object):
+    """
+    TODO: add some docstring for RRDWrapper
+    """
+    v_name = None
+    rrd = None
+    rrd_path = None
+    last_update_path = None
+    time_lapse = None
+    rrd_dir = None
+
+    def __init__(self, **kwargs):
+        self.rrd_path = kwargs["rrd_path"]
+        self.rrd = RRD(kwargs["rrd_path"])
+        self.last_update_path = kwargs["last_update_path"]
+        self.v_name = kwargs["v_name"]
+        self.time_lapse = kwargs["time_lapse"]
+        self.rrd_dir = kwargs["rrd_dir"]
+
+        if kwargs.get("create", False) and \
+                not os.path.exists(kwargs["rrd_path"]):
+            self.create()
+
+    @staticmethod
+    def get_path(rrd_dir, server_id, variable_id, sufix='.rrd'):
+        """
+        """
+        return os.path.join(rrd_dir, "s%dv%d%s" % (server_id,
+            variable_id, sufix))
+
+    @staticmethod
+    def get_instance(server, variable, time_lapse, rrd_dir):
+        """
+        """
+        rrd_path = RRDWrapper.get_path(rrd_dir, server.id, variable.id)
+        last_update_path = RRDWrapper.get_path(rrd_dir, server.id, variable.id,
+                '.last-update')
+        return RRDWrapper(rrd_path=rrd_path, last_update_path=last_update_path,
+                v_name=variable.name, time_lapse=time_lapse, rrd_dir=rrd_dir,
+                create=True)
+
+    def get_last_update(self):
+        """
+        """
+        with open(self.last_update_path, 'r') as f:
+            last_update_time = int(f.readline().strip())
+
+        logger.debug("Last updated time in %s: %d" % (self.last_update_path,
+            last_update_time))
+
+        return last_update_time
+
+    def set_last_update(self, timestamp):
+        """
+        """
+        logger.debug("Updated time to %d in %s" % (timestamp, \
+                self.last_update_path))
+
+        with open(self.last_update_path, 'w') as f:
+            f.write(str(timestamp).strip())
+
+    def create(self, now=int(time())):
+        """
+        """
+        now_start = now - self.time_lapse
+        now_start -= now_start % 10  # fixed to fit rrd laps
+        logger.info("Creating new RRD file in %s" % self.rrd_path)
+        self.rrd.create_rrd(self.time_lapse,
+                ((self.v_name, 'GAUGE', 'U', 'U'),),
+                start=now_start)
+        self.set_last_update(now_start)
+        logger.debug("Setted initial time to %d" % now_start)
+
+    def __must_update(self, last_update, now):
+        """TODO: add some docstring for must_update"""
+        diff = now - last_update
+        return (False if diff < self.time_lapse else True, diff)
+
+    def __fix_update_time(self, last_update, now):
+        """
+        Changes the timestamp to use as time mark for update. Since it doesn't
+        now how many time had passed (maybe the server was down for a few hours
+        or not) must determine the closer timestamp passed.
+
+        Parameteres:
+        @last_update (int): last timestamp saved.
+        @now (int): actual timestamp obteined.
+
+        Returns:
+        Int: The closer timestamp mark to update.
+        """
+        factor = (now - last_update) / self.time_lapse
+        return factor * self.time_lapse + last_update
+
+    def update(self, value, now=int(time())):
+        """
+        """
+        last_update = self.get_last_update()
+        must_update, sec = self.__must_update(last_update, now)
+        if not must_update:
+            raise TimeLapseException("It isn't time to update: %d seconds "\
+                    "(must at >= %d seconds)." % (sec, \
+                    self.time_lapse))
+
+        logger.debug("It is time to update :) %d seconds "\
+                "(must at >=%d seconds)." % (sec, self.time_lapse))
+
+        fv = int(float(value))
+        logger.debug("Floored value: %s=%d" % (self.v_name, fv))
+
+        fixed_time = self.__fix_update_time(last_update, now)
+        logger.debug("Fixed time=%d" % fixed_time)
+
+        self.rrd.update((fixed_time, fv),)
+
+        self.set_last_update(fixed_time)
