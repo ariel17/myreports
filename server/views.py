@@ -19,13 +19,13 @@ def show_all_servers(request):
 def show_server_id(request, id):
     """
     """
-    return show_reports(request, [get_object_or_404(Server, id=id),])
+    return show_reports(request, [get_object_or_404(Server, id=id), ])
 
 
 def show_server_ip(request, ip):
     """
     """
-    return show_reports(request, [get_object_or_404(Server, ip=ip),])
+    return show_reports(request, [get_object_or_404(Server, ip=ip), ])
 
 
 def show_server_name(request, name):
@@ -59,18 +59,19 @@ def show_reports(request, servers, with_general_index=False):
                 for v in se.variables.all():
                     sd['variables'].append({
                             'minutes': "s%dv%d.rrd-minutes.png" % (s.id, v.id),
+                            'hourly': "s%dv%d.rrd-hourly.png" % (s.id, v.id),
                             'daily': "s%dv%d.rrd-daily.png" % (s.id, v.id),
                             'weekly': "s%dv%d.rrd-weekly.png" % (s.id, v.id),
                             'monthly': "s%dv%d.rrd-monthly.png" % (s.id, v.id),
-                            'yearly': "s%dv%d.rrd-yearly.png" % (s.id, v.id),})
+                            'yearly': "s%dv%d.rrd-yearly.png" % (s.id, v.id)})
                 rd['sections'].append(sd)
             p['reports'].append(rd)
-        ss.append(p)                
+        ss.append(p)
 
     logger.debug("Rendering: %s" % repr(ss))
     return render_to_response('reports.html', \
-            {'servers': ss, 'with_general_index': with_general_index,},
-            context_instance=RequestContext(request) )
+            {'servers': ss, 'with_general_index': with_general_index},
+            context_instance=RequestContext(request))
 
 
 def test_connection(request):
