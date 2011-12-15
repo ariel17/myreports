@@ -8,4 +8,4 @@ RRD_DIR=$PROJECT_DIR/rrd
 MINUTES=10
 
 $PYTHON $PROJECT_DIR/manage.py $COMMAND --rrd-path=$RRD_DIR --minutes=$MINUTES \
-    --daily --weekly --monthly --yearly
+    --hourly --daily --weekly --monthly --yearly
