@@ -7,7 +7,7 @@ Description: Dumps graphics from RRDTool for all sections into image files.
 __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 
 import os
-import datetime 
+import datetime
 import time
 import logging
 from sys import exit
@@ -24,7 +24,15 @@ import collector.rrd as rrdtool
 logger = logging.getLogger(__name__)
 
 SUCCESS, MISSING_PARAMETERS_ERROR = range(2)
-DAY_MINUTES = 60 * 24
+
+MINUTE_SECONDS = 60
+HOUR_MINUTES = 60
+DAY_HOURS = 24
+DAY_MINUTES = HOUR_MINUTES * DAY_HOURS
+
+WEEK_DAYS = 7
+MONTH_DAYS = 30
+YEAR_DAYS = 365
 
 
 class BasicCache(object):
@@ -57,6 +65,8 @@ class Command(BaseCommand):
         make_option('--minutes', '-m', action='store', dest='minutes',
             default=0, help="How many minutes to draw. If it is not "\
                     "indicated or 0 then nothing is done."),
+        make_option('--hourly', '-u', action='store_true', dest='hourly',
+            default=False, help='Makes hourly graphs. Default: `False`.'),
         make_option('--daily', '-d', action='store_true', dest='daily',
             default=False, help='Makes daily graphs. Default: `False`.'),
         make_option('--weekly', '-w', action='store_true', dest='weekly',
@@ -68,7 +78,6 @@ class Command(BaseCommand):
     )
 
     help = ""
-    workers = []
     cache = BasicCache()
 
     def filter_rrds(self, path):
@@ -77,7 +86,7 @@ class Command(BaseCommand):
             for f in fs:
                 if f.endswith('.rrd'):
                     rrds.append(os.path.join(base, f))
-        return rrds                    
+        return rrds
 
     def deduce(self, rrd):
         f = os.path.basename(rrd)
@@ -85,11 +94,11 @@ class Command(BaseCommand):
 
     def ts_days(self, days=1):
         """TODO: add some docstring for ts_days"""
-        return int(time.time() - self.ts_minutes(60 * 24) * days)
+        return int(time.time() - self.ts_minutes(HOUR_MINUTES * DAY_HOURS) * \
+                days)
 
     def ts_minutes(self, minutes=1):
-        return int(time.time() - 60 * minutes)
-        
+        return int(time.time() - MINUTE_SECONDS * minutes)
 
     def handle(self, *args, **options):
         """
@@ -98,10 +107,11 @@ class Command(BaseCommand):
 
         periods = {
                 'minutes': float(options['minutes']),
-                'daily': 1 * DAY_MINUTES, 
-                'weekly': 7 * DAY_MINUTES, 
-                'monthly': 30 * DAY_MINUTES,
-                'yearly': 365 * DAY_MINUTES,
+                'hourly': HOUR_MINUTES,
+                'daily': DAY_MINUTES,
+                'weekly': WEEK_DAYS * DAY_MINUTES,
+                'monthly': MONTH_DAYS * DAY_MINUTES,
+                'yearly': YEAR_DAYS * DAY_MINUTES,
                 }
         if not any([options[p] for p in periods]):
             logger.error("Must indicate a period; see `[command] --help`"\
@@ -120,18 +130,17 @@ class Command(BaseCommand):
 
             v = self.cache.get(Variable, info["variable"])
             rrd = rrdtool.RRD(f_rrd)
+            img_path = os.path.join(options['img-path'], info['file'])
             params = {
                     'format': 'AREA',
                     'variable': v.name,
-                    'img': os.path.join(options['img-path'], info['file']),
                     'color': '0000FF',
                     }
-            
             try:
                 for p in periods:
                     if options[p]:
                         params['start'] = self.ts_minutes(periods[p])
-                        params['img'] = "%s-%s.png" % (params['img'], p)
+                        params['img'] = "%s-%s.png" % (img_path, p)
                         logger.info("Image for %s period in %s" % (p,
                             params['img']))
                         rrd.graph(**params)
