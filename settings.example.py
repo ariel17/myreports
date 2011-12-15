@@ -232,6 +232,8 @@ COLLECTOR_CONF = {
     'host': '127.0.0.1',
     'port': 8000,
     'pidlock_timeout': 3,  # seconds
+    'query_workers': 10,
+    'query_time-lapse': 60  # seconds
 }
 
 RRD_DIR = os.path.join(STATIC_ROOT, 'rrd')
