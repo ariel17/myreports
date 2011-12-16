@@ -140,6 +140,7 @@ class Command(BaseCommand):
                 for p in periods:
                     if options[p]:
                         params['start'] = self.ts_minutes(periods[p])
+                        params['title'] = p.capitalize()
                         params['img'] = "%s-%s.png" % (img_path, p)
                         logger.info("Image for %s period in %s" % (p,
                             params['img']))
