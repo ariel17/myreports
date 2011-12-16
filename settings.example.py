@@ -236,7 +236,7 @@ COLLECTOR_CONF = {
     'query_time-lapse': 60  # seconds
 }
 
-RRD_DIR = os.path.join(STATIC_ROOT, 'rrd')
+RRD_DIR = os.path.join(PROJECT_ROOT, 'rrd')
 
 COLLECTOR_APP_DIR = os.path.join(PROJECT_ROOT, 'collector')
 
