@@ -149,11 +149,13 @@ class RRD:
         Parameters:
         ***********
 
+        @title: Graph title.
         @img: Path to resulting image.
         @start: Timestamp begining.
         @end: Timestamp end.
         @variable: Variable name to draw.
         @color: Hexadecimal format.
+
 
         Colors:
         *******
@@ -167,12 +169,11 @@ class RRD:
 
         p = {'rrd_name': self.rrd_name, }
         p.update(kwargs)
-
-        if 'end' not in p:
-            p['end'] = int(time())
+        p.setdefault('end', int(time()))
 
         args = "%(img)s --start %(start)s --end %(end)s "\
                 "--vertical-label %(variable)s "\
+                "--title %(title)s "\
                 "DEF:v_%(variable)s=%(rrd_name)s:%(variable)s:AVERAGE "\
                 "%(format)s:v_%(variable)s#%(color)s" % p
         cmd_graph = "rrdtool graph " + args
