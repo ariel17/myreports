@@ -12,43 +12,23 @@ customizable report generator for one or more MySQL servers configured.
 Installation
 ------------
 
-1) Get the code from the Github repository:
-
-    ~$ git clone git@github.com:ariel17/myreports.git
+1) Get the code: https://github.com/ariel17/myreports
 
 2) Create a virtual environment for Python using virtualenv
-   [http://www.virtualenv.org/] and virtualenvwrapper
-   [http://www.doughellmann.com/projects/virtualenvwrapper/]:
+[http://www.virtualenv.org/] and virtualenvwrapper
+[http://www.doughellmann.com/projects/virtualenvwrapper/].
 
-    ~$ mkvirtualenv --no-site-packages --distribute myreports
-
-3) Install dependences and RRDTool [http://oss.oetiker.ch/rrdtool/]:
-
-    (myreports)~/myreports$ pip install -r deploy/requeriments/devel.txt
-
-    (myreports)~/myreports$ sudo apt-get install rrdtool  # debian/ubuntu
+3) Install dependences with pip [http://www.pip-installer.org] and RRDTool
+[http://oss.oetiker.ch/rrdtool/].
 
 5) Configure settings.py using settings.example.py as base file.
 
-6) Adjust your prefered database and sync:
+6) Adjust your prefered database and sync.
 
-     (myreports)~/myreports$ python manage.py syncdb
-
-7) Run the test server, the collector RPC daemon, the RPC client or the image
-   creator:
-
-    (myreports)~/myreports$ python manage.py runserver 0.0.0.0:8080  # /admin/
-
-    (myreports)~/myreports$ python manage.py collector_rpc --port 5000
-
-    (myreports)~/myreports$ python manage.py collector_query --port 5000
-
-    (myreports)~/myreports$ python manage.py collector-graph
-
-    You can always check for --help .
+7) See collector-*_call-example files for example executions.
 
 
-Some day, everything will be easier :)
+You can always check for --help ;)
 
 --
 Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)
