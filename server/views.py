@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -71,7 +72,8 @@ def show_reports(request, servers, with_general_index=False):
     logger.debug("Rendering: %s" % repr(ss))
     return render_to_response('reports.html', \
             {'servers': ss, 'with_general_index': with_general_index},
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request, {'CRONTAB_TIME_LAPSE':
+                settings.CRONTAB_TIME_LAPSE,}))
 
 
 def test_connection(request):
