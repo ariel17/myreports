@@ -30,6 +30,15 @@ def clean(all=False):
     print green("Project cleaned.")            
 
 
+def clean_startup():
+    """
+    Use .gitignore rules to clean the current project.
+    """
+    for pattern in ('*.pyc', '*pyo', '*.pid*', '*.log'):
+        local("/usr/bin/find -name '%s' -delete" % pattern.strip())
+    print green("Project cleaned.")            
+
+
 def create_dirs():
     """
     TODO: add some docstring for check_directories
