@@ -8,8 +8,11 @@ LOG_DIR=/tmp
 PID_DIR=/tmp
 HOST=127.0.0.1
 PORT=8001
+FABRIC=/usr/bin/fab
+
+
+$FABRIC clean_startup;
 
 $PYTHON $PROJECT_DIR/manage.py $COMMAND --host $HOST --port $PORT \
     --stdout=$LOG_DIR/$COMMAND-out.log --stderr=$LOG_DIR/$COMMAND-err.log \
-    --pidfile=$PID_DIR/$COMMAND.pid
-    
+    --pidfile=$PID_DIR/$COMMAND.pid;
