@@ -19,7 +19,38 @@ class ServerAdmin(admin.ModelAdmin):
 
 
 class ReportByServerAdmin(admin.ModelAdmin):
-    list_display = ("server", "report", "order")
+    list_display = ("assigned", "server_4_list", "report_4_list", "order")
+
+    def assigned(self, object):
+        if object.report:
+            return "<a href=\"%s\">'%s' @ '%s'</a>" % \
+                    ("/admin/server/reportbyserver/%s/" % (object.id,), \
+                    object.report, object.server,)
+        else:
+            return 'N/A'
+    assigned.allow_tags = True
+    assigned.short_description = "Assigned"
+    assigned.admin_order_field = 'assigned'
+
+    def server_4_list(self, object):
+        if object.report:
+            return "<a href=\"%s\">%s</a>" % ("/admin/server/server/%s/" \
+                % (object.server.id,), object.server,)
+        else:
+            return 'N/A'
+    server_4_list.allow_tags = True
+    server_4_list.short_description = "Server"
+    server_4_list.admin_order_field = 'server'
+
+    def report_4_list(self, object):
+        if object.report:
+            return "<a href=\"%s\">%s</a>" % ("/admin/server/report/%s/" \
+                % (object.report.id,), object.report,)
+        else:
+            return 'N/A'
+    report_4_list.allow_tags = True
+    report_4_list.short_description = "Report"
+    report_4_list.admin_order_field = 'report'
 
 
 class DatabaseAdmin(admin.ModelAdmin):
