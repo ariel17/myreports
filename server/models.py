@@ -200,6 +200,9 @@ class ReportByServer(models.Model):
         return u"ReportByServer report_id=%d server_id=%d order=%d" % \
                 (self.report.id, self.server.id, self.order)
 
+    class Meta:
+        verbose_name_plural = "Reports Assigned"
+
 
 class Database(models.Model):
     """
