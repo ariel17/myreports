@@ -7,5 +7,6 @@ settings.py
 *.dot
 *.rrd
 *.last-update
+*.lock
 gabrielle-*
 natalie-*
