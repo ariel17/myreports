@@ -13,8 +13,7 @@ import os
 import settings
 
 
-CURRENT_DIR = os.path.realpath(os.path.dirname(__file__))
-IGNORE = os.path.join(CURRENT_DIR, ".gitignore")
+IGNORE = os.path.join(settings.PROJECT_ROOT, ".gitignore")
 
 
 def clean(all=False):
