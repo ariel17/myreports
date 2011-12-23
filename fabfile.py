@@ -32,9 +32,11 @@ def clean(all=False):
 
 def clean_startup():
     """
-    Use .gitignore rules to clean the current project.
+    Remove only those files that are the result of using this application, like
+    log files, unremoved pid files.
     """
-    for pattern in ('*.pyc', '*pyo', '*.pid*', '*.log'):
+    for pattern in ('*.pyc', '*pyo', '*.pid*', '*.log', 'gabrielle-*',
+            'natalie-*'):
         local("/usr/bin/find -name '%s' -delete" % pattern.strip())
     print green("Project cleaned.")            
 
