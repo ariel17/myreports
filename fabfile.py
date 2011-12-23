@@ -43,7 +43,7 @@ def clean_startup():
 
 def create_dirs():
     """
-    TODO: add some docstring for check_directories
+    Creates all needed directories for complete execution.
     """
     for d in [settings.GRAPH_DIR, settings.RRD_DIR]:
         if not os.path.exists(d):
