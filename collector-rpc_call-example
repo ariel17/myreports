@@ -4,15 +4,24 @@ PROJECT_NAME=myreports
 PROJECT_DIR=~/develop/$PROJECT_NAME
 PYTHON=/var/lib/virtualenv/$PROJECT_NAME/bin/python
 COMMAND=collector-rpc
-LOG_DIR=/tmp
-PID_DIR=/tmp
 HOST=127.0.0.1
 PORT=8001
+
+LOG_DIR=/tmp
+OUT_LOG=$LOG_DIR/$COMMAND-out.log
+ERR_LOG=$LOG_DIR/$COMMAND-err.log
+
+PID_DIR=/tmp
+PID_FILE=$PID_DIR/$COMMAND.pid
+
 FABRIC=/usr/bin/fab
 
 
+echo 
+echo ">> Cleaning project"
 $FABRIC clean_startup;
 
+echo
+echo ">> Starting RPC server"
 $PYTHON $PROJECT_DIR/manage.py $COMMAND --host $HOST --port $PORT \
-    --stdout=$LOG_DIR/$COMMAND-out.log --stderr=$LOG_DIR/$COMMAND-err.log \
-    --pidfile=$PID_DIR/$COMMAND.pid;
+    --stdout=$OUT_LOG --stderr=$ERR_LOG --pidfile=$PID_FILE;
