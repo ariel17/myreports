@@ -90,3 +90,6 @@ class SectionByReport(models.Model):
     def __unicode__(self):
         return u"SectionByReport report_id=%d section_id=%d order=%d" % \
                 (self.report.id, self.section.id, self.order)
+
+    class Meta:
+        verbose_name_plural = "Sections Assigned"
