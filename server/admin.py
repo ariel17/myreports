@@ -23,14 +23,14 @@ class ReportByServerAdmin(admin.ModelAdmin):
 
     def assigned(self, object):
         if object.report:
-            return "<a href=\"%s\">'%s' @ '%s'</a>" % \
+            return "<a href=\"%s\">%s / %s</a>" % \
                     ("/admin/server/reportbyserver/%s/" % (object.id,), \
-                    object.report, object.server,)
+                    object.server, object.report)
         else:
             return 'N/A'
     assigned.allow_tags = True
     assigned.short_description = "Assigned"
-    assigned.admin_order_field = 'assigned'
+    assigned.admin_order_field = 'server'
 
     def server_4_list(self, object):
         if object.report:
