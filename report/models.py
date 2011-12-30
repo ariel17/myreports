@@ -46,6 +46,10 @@ class Section(WithText):
     """
     variables = models.ManyToManyField(Variable, help_text="Wich variables "\
             "are included to generate this report section.")
+    thresholds = models.CharField(_("Thresholds"), blank=True, null=True, 
+            max_length=255, help_text="Establish limits for this variable. "\
+                    "Use the format: "\
+                    "&lt;value&gt;:&#35;&lt;hexa_color&gt;:&lt;legend&gt;,...")
 
     def variables_involved(self):
         return u",".join([v.name for v in self.variables.all()])
@@ -56,6 +60,12 @@ class Section(WithText):
     @models.permalink
     def get_absolute_url(self):
         return ('show_section_id', (self.id,))
+
+    def parse_threshod(self):
+        """
+        Returns a list with threshold content parsed.
+        """
+        return self.threshold.strip().split(',')
 
 
 class Report(WithText):
