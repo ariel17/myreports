@@ -6,8 +6,8 @@ class ReportByServerInline(admin.TabularInline):
     model = ReportByServer
 
 
-class DatabaseInline(admin.TabularInline):
-    model = Database
+# class DatabaseInline(admin.TabularInline):
+#     model = Database
 
 
 class ServerAdmin(admin.ModelAdmin):
@@ -15,7 +15,12 @@ class ServerAdmin(admin.ModelAdmin):
             "url")
     list_filter = ("port", "active")
     ordering = ("name", "ip", "active")
-    inlines = [DatabaseInline, ReportByServerInline, ]
+    inlines = [ReportByServerInline, ]  # DatabaseInline, ]
+
+    fieldsets = (
+            ('Server properties', {'fields': (("name", "active"), ("ip",
+                "port"), ("username", "password"))}),
+            )
 
 
 class ReportByServerAdmin(admin.ModelAdmin):
@@ -58,12 +63,12 @@ class ReportByServerAdmin(admin.ModelAdmin):
             )
 
 
-class DatabaseAdmin(admin.ModelAdmin):
-    list_display = ("server", "name")
-    list_filter = ("server", "name")
-    ordering = ("server", "name")
+# class DatabaseAdmin(admin.ModelAdmin):
+#     list_display = ("server", "name")
+#     list_filter = ("server", "name")
+#     ordering = ("server", "name")
 
 
 admin.site.register(Server, ServerAdmin)
 admin.site.register(ReportByServer, ReportByServerAdmin)
-admin.site.register(Database, DatabaseAdmin)
+# admin.site.register(Database, DatabaseAdmin)
