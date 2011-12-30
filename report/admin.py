@@ -60,6 +60,11 @@ class SectionByReportAdmin(admin.ModelAdmin):
     section_4_list.short_description = "Server"
     section_4_list.admin_order_field = 'server'
 
+    fieldsets = (
+            ('Asignation', {'fields': (('report', 'section'),)}),
+            ('Properties', {'fields': ('order',)}),
+            )
+
 
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Section, SectionAdmin)
