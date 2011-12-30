@@ -52,6 +52,11 @@ class ReportByServerAdmin(admin.ModelAdmin):
     report_4_list.short_description = "Report"
     report_4_list.admin_order_field = 'report'
 
+    fieldsets = (
+            ('Asignation', {'fields': (('server', 'report'),)}),
+            ('Properties', {'fields': ('order',)}),
+            )
+
 
 class DatabaseAdmin(admin.ModelAdmin):
     list_display = ("server", "name")
