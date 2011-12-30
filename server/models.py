@@ -149,7 +149,7 @@ class Server(MySQLHandler):
     def __unicode__(self):
         return u"%s" % self.name
 
-    @models.permalink                           
+    @models.permalink
     def url(self):
         return ('server_id', (self.id,))
 
