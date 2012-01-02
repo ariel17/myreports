@@ -233,7 +233,8 @@ class RRDWrapper(object):
     def get_instance(server, section, variable, time_lapse, rrd_dir):
         """
         """
-        rrd_path = RRDWrapper.get_path(rrd_dir, server.id, variable.id)
+        rrd_path = RRDWrapper.get_path(rrd_dir, server.id, section.id,
+                variable.id)
         last_update_path = RRDWrapper.get_path(rrd_dir, server.id, section.id,
                 variable.id, '.last-update')
         return RRDWrapper(rrd_path=rrd_path, last_update_path=last_update_path,
