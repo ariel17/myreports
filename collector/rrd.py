@@ -24,6 +24,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+RRD_NAME_FORMAT = "s%(server_id)d-se%(section_id)d-v%(variable_id)d%(suffix)s"
+
 
 class RRDException(Exception):
     pass
@@ -91,7 +93,7 @@ class RRD:
 
         # build the command line to send to RRDtool
         parts = ['rrdtool create ', self.rrd_name,
-                '--start %s' % str(start) if start else '', 
+                '--start %s' % str(start) if start else '',
                 '--step %s' % str(interval), ds_string, ]
 
         for a in (averages if averages else (('0.5', '1', '10'),)):
@@ -155,6 +157,7 @@ class RRD:
         @end: Timestamp end.
         @variable: Variable name to draw.
         @color: Hexadecimal format.
+        @limits: Limits to mark in graph, as RRDTool command parameters.
 
 
         Colors:
@@ -175,7 +178,8 @@ class RRD:
                 "--vertical-label %(variable)s "\
                 "--title %(title)s "\
                 "DEF:v_%(variable)s=%(rrd_name)s:%(variable)s:AVERAGE "\
-                "%(format)s:v_%(variable)s#%(color)s" % p
+                "%(format)s:v_%(variable)s#%(color)s "\
+                "%(limits)s"% p
         cmd_graph = "rrdtool graph " + args
         logger.debug("Executing: `%s`" % cmd_graph)
 
@@ -186,6 +190,12 @@ class RRD:
             raise RRDException("Exception building graphs: " + cmd_output)
         else:
             logger.info("rrdtool output: %s" % cmd_output)
+
+
+
+
+
+
 
 
 class RRDWrapper(object):
@@ -212,22 +222,37 @@ class RRDWrapper(object):
             self.create()
 
     @staticmethod
-    def get_path(rrd_dir, server_id, variable_id, sufix='.rrd'):
+    def get_path(rrd_dir, server_id, section_id, variable_id, suffix='.rrd'):
         """
         """
-        return os.path.join(rrd_dir, "s%dv%d%s" % (server_id,
-            variable_id, sufix))
+        return os.path.join(rrd_dir, RRD_NAME_FORMAT % \
+                {"server_id": server_id, "section_id": section_id,
+                    "variable_id": variable_id, "suffix": suffix})
 
     @staticmethod
-    def get_instance(server, variable, time_lapse, rrd_dir):
+    def get_instance(server, section, variable, time_lapse, rrd_dir):
         """
         """
         rrd_path = RRDWrapper.get_path(rrd_dir, server.id, variable.id)
-        last_update_path = RRDWrapper.get_path(rrd_dir, server.id, variable.id,
-                '.last-update')
+        last_update_path = RRDWrapper.get_path(rrd_dir, server.id, section.id,
+                variable.id, '.last-update')
         return RRDWrapper(rrd_path=rrd_path, last_update_path=last_update_path,
                 v_name=variable.name, time_lapse=time_lapse, rrd_dir=rrd_dir,
                 create=True)
+
+    @staticmethod
+    def deduce_from_file(self, rrd):
+        """
+        Obtains info from file name.
+        """
+        def get_int(s):
+            return ''.join([c for c in s if c in '0123456789'])
+
+        f = os.path.basename(rrd).split("-")
+        return {"server_id": int(get_int(f[0])),
+                "section_id": int(get_int(f[1])),
+                "variable_id": int(get_int(f[2])),
+                "file": f, }
 
     def get_last_update(self):
         """
