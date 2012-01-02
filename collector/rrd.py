@@ -179,7 +179,7 @@ class RRD:
                 "--title %(title)s "\
                 "DEF:v_%(variable)s=%(rrd_name)s:%(variable)s:AVERAGE "\
                 "%(format)s:v_%(variable)s#%(color)s "\
-                "%(limits)s"% p
+                "%(limits)s" % p
         cmd_graph = "rrdtool graph " + args
         logger.debug("Executing: `%s`" % cmd_graph)
 
@@ -190,12 +190,6 @@ class RRD:
             raise RRDException("Exception building graphs: " + cmd_output)
         else:
             logger.info("rrdtool output: %s" % cmd_output)
-
-
-
-
-
-
 
 
 class RRDWrapper(object):
@@ -242,17 +236,18 @@ class RRDWrapper(object):
                 create=True)
 
     @staticmethod
-    def deduce_from_file(self, rrd):
+    def deduce_from_file(rrd):
         """
         Obtains info from file name.
         """
         def get_int(s):
             return ''.join([c for c in s if c in '0123456789'])
 
-        f = os.path.basename(rrd).split("-")
-        return {"server_id": int(get_int(f[0])),
-                "section_id": int(get_int(f[1])),
-                "variable_id": int(get_int(f[2])),
+        f = os.path.basename(rrd)
+        ff = f.split("-")
+        return {"server_id": int(get_int(ff[0])),
+                "section_id": int(get_int(ff[1])),
+                "variable_id": int(get_int(ff[2])),
                 "file": f, }
 
     def get_last_update(self):
