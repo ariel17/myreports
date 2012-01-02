@@ -8,6 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+THRESHOLD_SEPARATOR = ","
+
+
 class Variable(models.Model):
     """
     It represents a variable as it is.
@@ -46,10 +49,11 @@ class Section(WithText):
     """
     variables = models.ManyToManyField(Variable, help_text="Wich variables "\
             "are included to generate this report section.")
-    thresholds = models.CharField(_("Thresholds"), blank=True, null=True, 
+    thresholds = models.CharField(_("Thresholds"), blank=True, null=True,
             max_length=255, help_text="Establish limits for this variable. "\
                     "Use the format: "\
-                    "&lt;value&gt;:&#35;&lt;hexa_color&gt;:&lt;legend&gt;,...")
+                    "&lt;value&gt;:&#35;&lt;hexa_color&gt;:&lt;legend&gt;%s..."
+                    % THRESHOLD_SEPARATOR)
 
     def variables_involved(self):
         return u",".join([v.name for v in self.variables.all()])
@@ -65,7 +69,10 @@ class Section(WithText):
         """
         Returns a list with threshold content parsed.
         """
-        return self.threshold.strip().split(',')
+        if self.threshold:
+            return " ".join(["HRULE:%s" % t for t in \
+                self.threshold.strip().split(THRESHOLD_SEPARATOR)])
+        return ""
 
 
 class Report(WithText):
