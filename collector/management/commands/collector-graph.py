@@ -119,8 +119,9 @@ class Command(BaseCommand):
         for f_rrd in rrds:
             logger.debug("Processing %s" % f_rrd)
             try:
-                info = RRDWrapper.deduce_from_file(f_rrd)
+                info = rrdtool.RRDWrapper.deduce_from_file(f_rrd)
             except:
+                logger.exception("Exception parsing RRD filename:")
                 logger.warn("Invalid RRD filename for '%s'" % f_rrd)
                 continue
 
