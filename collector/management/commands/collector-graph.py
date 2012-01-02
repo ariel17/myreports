@@ -16,7 +16,7 @@ from optparse import make_option
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
-from report.models import Variable
+from report.models import Section, Variable, THRESHOLD_SEPARATOR
 
 import collector.rrd as rrdtool
 
@@ -88,10 +88,6 @@ class Command(BaseCommand):
                     rrds.append(os.path.join(base, f))
         return rrds
 
-    def deduce(self, rrd):
-        f = os.path.basename(rrd)
-        return {"server": int(f[1]), "variable": int(f[3]), "file": f, }
-
     def ts_days(self, days=1):
         """TODO: add some docstring for ts_days"""
         return int(time.time() - self.ts_minutes(HOUR_MINUTES * DAY_HOURS) * \
@@ -123,18 +119,20 @@ class Command(BaseCommand):
         for f_rrd in rrds:
             logger.debug("Processing %s" % f_rrd)
             try:
-                info = self.deduce(f_rrd)
+                info = RRDWrapper.deduce_from_file(f_rrd)
             except:
                 logger.warn("Invalid RRD filename for '%s'" % f_rrd)
                 continue
 
-            v = self.cache.get(Variable, info["variable"])
+            se = self.cache.get(Section, info["section_id"])
+            v = self.cache.get(Variable, info["variable_id"])
             rrd = rrdtool.RRD(f_rrd)
             img_path = os.path.join(options['img-path'], info['file'])
             params = {
                     'format': 'AREA',
                     'variable': v.name,
                     'color': '0000FF',
+                    'limits': se.parse_threshold(),
                     }
             try:
                 for p in periods:
