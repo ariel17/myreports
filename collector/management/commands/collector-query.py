@@ -76,12 +76,12 @@ class QueryWorker(Worker):
     def run(self):
         while not self.queue.empty():
             try:
-                (s, v) = self.queue.get_nowait()  # A server-variable tuple
+                (s, se, v) = self.queue.get_nowait()  # A server-variable tuple
 
                 value = self.get_value(s.id, v)
 
-                rrd = rrdtool.RRDWrapper.get_instance(s, v, self.time_lapse,
-                        self.rrd_dir)
+                rrd = rrdtool.RRDWrapper.get_instance(s, se, v,
+                        self.time_lapse, self.rrd_dir)
                 rrd.update(value[v.name])
 
             except Queue.Empty:
@@ -118,7 +118,7 @@ class Command(BaseCommand):
             type=int, help='Port to bind the query server on. Default: %d' %
             settings.COLLECTOR_CONF['port']),
 
-        make_option('--time-lapse', action='store', dest='time-lapse',                              
+        make_option('--time-lapse', action='store', dest='time-lapse',
             default=settings.COLLECTOR_CONF['query_time-lapse'],
             type=int, help='How many seconds between update lapses. '\
                     'Default: %d' %
@@ -165,7 +165,7 @@ class Command(BaseCommand):
             for r in s.reports.all():
                 for se in r.sections.all():
                     for v in se.variables.filter(current=False):
-                        queue.put((s, v))
+                        queue.put((s, se, v))
         return queue
 
     def handle(self, *args, **options):
@@ -189,7 +189,7 @@ class Command(BaseCommand):
             [w.join() for w in workers]
 
             exit(SUCCESS)
-        
+
         except AlreadyRunningError:
             exit(ALREADY_RUNNING_ERROR)
 
