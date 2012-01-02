@@ -65,13 +65,13 @@ class Section(WithText):
     def get_absolute_url(self):
         return ('show_section_id', (self.id,))
 
-    def parse_threshod(self):
+    def parse_threshold(self):
         """
         Returns a list with threshold content parsed.
         """
-        if self.threshold:
+        if self.thresholds:
             return " ".join(["HRULE:%s" % t for t in \
-                self.threshold.strip().split(THRESHOLD_SEPARATOR)])
+                self.thresholds.strip().split(THRESHOLD_SEPARATOR)])
         return ""
 
 
