@@ -12,10 +12,17 @@ class ReportByServerInline(admin.TabularInline):
 
 class ServerAdmin(admin.ModelAdmin):
     list_display = ("name", "active", "ip", "port", "available_reports", \
-            "url")
+            "url_launcher")
     list_filter = ("port", "active")
     ordering = ("name", "ip", "active")
     inlines = [ReportByServerInline, ]  # DatabaseInline, ]
+
+    def url_launcher(self, object):
+        url = object.url()
+        return "<a href=\"%s\">%s</a>" % (url, url)
+    url_launcher.allow_tags = True
+    url_launcher.short_description = "URL"
+    url_launcher.admin_order_field = "url"
 
     fieldsets = (
             ('Server properties', {'fields': (("name", "active"), ("ip",
