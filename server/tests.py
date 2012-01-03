@@ -6,6 +6,7 @@ Replace this with more appropriate tests for your application.
 """
 
 from django.test import TestCase
+from server.models import Server
 
 
 class SimpleTest(TestCase):
@@ -14,3 +15,16 @@ class SimpleTest(TestCase):
         Tests that 1 + 1 always equals 2.
         """
         self.assertEqual(1 + 1, 2)
+
+
+class ServerTest(TestCase):
+    """
+    Testing for Server model.
+    """
+    def setUp(self):
+        s = Server(ip="127.0.0.1", username="root", name="localhost_test")
+        s.save()
+
+    def test_connection(self):
+        self.assertEqual(True, True)
+    
