@@ -84,7 +84,7 @@ class MySQLHandler(models.Model):
 
     def restart(self):
         self.close()
-        self.connect()
+        return self.connect()
 
     def doquery(self, sql, parsefunc=None):
         """
