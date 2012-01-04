@@ -22,9 +22,35 @@ class ServerTest(TestCase):
     Testing for Server model.
     """
     def setUp(self):
-        s = Server(ip="127.0.0.1", username="root", name="localhost_test")
-        s.save()
+        self.s = Server(ip="127.0.0.1", username="root", name="localhost_test")
+        self.s.save()
 
-    def test_connection(self):
-        self.assertEqual(True, True)
-    
+    def teatDown(self):
+        """
+        """
+        self.s.close()
+
+    def test_connect(self):
+        """
+        Testing 'connection' method for Server class.
+        """
+        self.s.close()
+        self.assertIn(self.s.connect(), [True, False])
+
+    def test_doquery(self):
+        """
+        Testing query request and result format.
+        """
+        self.s.restart()
+
+        sql = "SELECT NOW();"
+        r = self.s.doquery(sql)
+        self.assertTrue(r)
+
+    def test_show_status(self):
+        """
+        Testing status query for server.
+        """
+        self.s.restart()
+        r = self.s.show_status(pattern='Threads_running')
+        self.assertTrue(r)
