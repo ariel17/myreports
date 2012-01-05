@@ -91,13 +91,12 @@ class Worker(threading.Thread):
         raise NotImplementedError("Must implement this method.")
 
 
-class RPCHandler(object):
+class RPCHandler:
     """
     """
     servers = {}
 
     def __init__(self, servers):
-        super(RPCHandler, self).__init__()
         self.__servers_to_dict(servers)
 
     def __servers_to_dict(self, server_list):
