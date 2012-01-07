@@ -89,7 +89,6 @@ class Worker(threading.Thread):
     """
     This is a generic threaded worker.
     """
-
     running = True
 
     def __init__(self, id):
