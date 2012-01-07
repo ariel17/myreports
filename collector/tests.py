@@ -55,3 +55,39 @@ class TestRRDWrapper(TestCase):
 
     def tearDown(self):
         pass
+
+
+class TestCollectorGraphCommand(TestCase):
+    """
+    TODO: define tests to do.
+    """
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+
+class TestCollectorRPCCommand(TestCase):   
+    """
+    TODO: define tests to do.
+    """
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+
+class TestCollectorQueryCommand(TestCase):       
+    """
+    TODO: define tests to do.
+    """
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
