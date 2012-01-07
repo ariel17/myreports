@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Description: Test suite for the protocol package.
+Description: Test suite for the Django application 'collector'.
 """
 __author__ = "Ariel Gerardo Ríos (arielgerardorios@gmail.com)"
 
@@ -28,6 +28,30 @@ class TestRPCHandler(TestCase):
         """
         Test remote call to a Server method.
         """
-        self.rh = RPCHandler([self.s,])
+        self.rh = RPCHandler([self.s, ])
         r = self.rh.call_method(self.s.id, "show_processlist")
         self.assertTrue(len(r))
+
+
+class TestRRD(TestCase):
+    """
+    TODO: define tests to do.
+    """
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+
+class TestRRDWrapper(TestCase):
+    """
+    TODO: define tests to do.
+    """
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
