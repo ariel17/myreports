@@ -33,6 +33,7 @@ class RRDException(Exception):
 
 class TimeLapseException(Exception):
     """
+    A time lapse exception.
     """
     def __init__(self, value):
         self.parameter = value
