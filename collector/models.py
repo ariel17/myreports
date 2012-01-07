@@ -1,9 +1,16 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Description: Classes and data models for the Django application 'collector'.
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
+
+
 import os
 import logging
 import threading
-
 from django.conf import settings
-
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 
 
@@ -12,15 +19,18 @@ logger = logging.getLogger(__name__)
 
 class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
     """
+    JSON implementation for RPC protocol.
     """
     MAX_CHUNK_SIZE = 10 * 1024 * 1024
 
     def do_GET(self):
         """
+        HTTP GET method processor.
         """
         c_ip, c_port = self.client_address
-        logger.info("Request from %s:%s [GET]: %s" % (c_ip, c_port, data))
-        logger.warning("[HTTP 400] Method not allowed.")
+        logger.info("[Request] Client %s:%s method GET: %s" %
+                (c_ip, c_port, data))
+        logger.warning("[Response] HTTP 400 - Method not allowed.")
         self.send_response(400)
         response = ''
         self.send_header("Content-type", "application/json-rpc")
@@ -32,10 +42,11 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
 
     def do_POST(self):
         """
+        HTTP POST method processor.
         """
         if not self.is_rpc_path_valid():
-            logger.warning("[HTTP 404] The path requested is not a valid "\
-                    "address.")
+            logger.warning("[Response] HTTP 404 - The path requested "\
+                    "is not a valid address.")
             self.report_404()
             return
 
@@ -48,20 +59,24 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
                 size_remaining -= len(L[-1])
             data = ''.join(L)
             c_ip, c_port = self.client_address
-            logger.info("Request from %s:%s [POST]: %s" % (c_ip, c_port, data))
+            logger.info("[Request] Client %s:%s method POST: %s" %
+                    (c_ip, c_port, data))
             response = self.server._marshaled_dispatch(data)
-            self.send_response(200)
-            logger.info("[HTTP 200] Request accepted.")
+            status = 200
+            message = "Request accepted."
         except Exception:
-            logger.exception("[HTTP 500] Internal Server Error:")
-            self.send_response(500)
+            logger.exception("Exception processing request:")
+            status = 500
+            message = "Internal Server Error."
             err_lines = traceback.format_exc().splitlines()
             trace_string = '%s | %s' % (err_lines[-3], err_lines[-1])
             fault = jsonrpclib.Fault(-32603, 'Server error: %s' % trace_string)
             response = fault.response()
-        if response == None:
-            response = ''
-        logger.info("Response: %s" % response)
+        finally:
+            logger.info("[Response] HTTP %d - %s" % (status, message))
+            self.send_response(status)
+
+        logger.info("[Response] Content: %s" % repr(response))
         self.send_header("Content-type", "application/json-rpc")
         self.send_header("Content-length", str(len(response)))
         self.end_headers()
@@ -93,6 +108,8 @@ class Worker(threading.Thread):
 
 class RPCHandler:
     """
+    This class is the RPC backend that knows what to do with a correct request
+    to this service.
     """
     servers = {}
 
@@ -109,6 +126,8 @@ class RPCHandler:
 
     def call_method(self, id, method, kwargs={}):
         """
+        Performs a call to the indicated method with kwargs given to a Server
+        object with the same `id` value as the idoneous parameter.
         """
         s = self.servers.get(id, None)
         return getattr(s, method)(**kwargs) if s else None
