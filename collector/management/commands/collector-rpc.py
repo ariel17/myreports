@@ -85,6 +85,12 @@ logger = logging.getLogger(__name__)
 SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_ERROR = range(3)
 
 
+class StoppableSimpleJSONRPCServer(SimpleJSONRPCServer):
+    """
+    """
+    pass
+
+
 class Command(BaseCommand):
 
     option_list = BaseCommand.option_list + (
@@ -143,28 +149,29 @@ class Command(BaseCommand):
     servers = []
     context = daemon.DaemonContext()
 
-    def tear_down(self):
+    def tear_down(self, signum=None, frame=None):
         """
         Handle to all task that must be made to close clean and fast.
         """
+        if signum and frame:
+            logger.debug(">> Signal received: signum=%s frame=%s" %
+                    (repr(signum), repr(frame)))
         logger.info(">> Tearing down.")
-        self.__stop_rpc()
         self.__close_servers()
+        self.__stop_rpc()
         self.__close_streams()
         logger.info("Closing context.")
         # self.context.pidfile.release()
         self.context.close()
 
-    def reload_config(self):
+    def reload_config(self, signum, frame):
         """
         Reloads configuration and reconnects for all servers.
         """
         logger.info(">>> Reloading configuration.")
         logger.debug("Restarting all connections.")
-        self.__stop_rpc()
         self.__close_servers()
         self.__connect_servers()
-        self.__start_rpc()
 
     def __connect_servers(self):
         """
@@ -268,10 +275,10 @@ class Command(BaseCommand):
 
         # Assingning signal handlers.
         self.context.signal_map = {
-                signal.SIGTERM: self.tear_down,
-                signal.SIGHUP: 'terminate',
-                signal.SIGUSR1: self.reload_config,
-                signal.SIGUSR2: self.tear_down,
+                # signal.SIGTERM: self.tear_down,
+                signal.SIGHUP: self.reload_config,   # 'terminate',
+                # signal.SIGUSR1: self.reload_config,
+                # signal.SIGUSR2: self.tear_down,
         }
 
         logger.debug("Trying to open daemon context.")
