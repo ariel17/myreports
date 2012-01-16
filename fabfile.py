@@ -44,7 +44,8 @@ def create_dirs():
     """
     Creates all needed directories for complete execution.
     """
-    for d in [settings.GRAPH_DIR, settings.RRD_DIR]:
+    for d in [settings.GRAPH_DIR, settings.RRD_DIR,
+            settings.CACHES['default']['LOCATION']]:
         if not os.path.exists(d):
             os.makedirs(d)
             print "Created dir '%s'" % d
