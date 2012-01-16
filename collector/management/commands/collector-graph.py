@@ -14,11 +14,13 @@ from sys import exit
 from optparse import make_option
 
 from django.core.management.base import BaseCommand
+from django.core.cache import cache
 from django.conf import settings
 from server.models import Server
 from report.models import Section, Variable, THRESHOLD_SEPARATOR
 
 import collector.rrd as rrdtool
+from collector.cache import CacheWrapper
 
 
 logger = logging.getLogger(__name__)
@@ -33,24 +35,6 @@ DAY_MINUTES = HOUR_MINUTES * DAY_HOURS
 WEEK_DAYS = 7
 MONTH_DAYS = 30
 YEAR_DAYS = 365
-
-
-class BasicCache(object):
-    """
-    TODO: add some docstring for BasicCache
-    """
-    cache = {}
-
-    def set(self, obj):
-        """TODO: add some docstring for set"""
-        self.cache.setdefault(obj.__class__.__name__, {})[obj.id] = obj
-        return obj
-
-    def get(self, cl, id):
-        """TODO: add some docstring for get"""
-        objs = self.cache.get(cl.__name__, None)
-        obj = objs.get(id, None) if objs else None
-        return obj if obj else self.set(cl.objects.get(id=id))
 
 
 class Command(BaseCommand):
@@ -78,7 +62,7 @@ class Command(BaseCommand):
     )
 
     help = ""
-    cache = BasicCache()
+    cache_w = CacheWrapper(cache)
 
     def filter_rrds(self, path):
         rrds = []
@@ -125,8 +109,10 @@ class Command(BaseCommand):
                 logger.warn("Invalid RRD filename for '%s'" % f_rrd)
                 continue
 
-            se = self.cache.get(Section, info["section_id"])
-            v = self.cache.get(Variable, info["variable_id"])
+            se = self.cache_w.get('section_%d' % info["section_id"], None,
+                    Section, id=info["section_id"])
+            v = self.cache_w.get('variable_%d' % info["variable_id"], None,
+                    Variable, id=info["variable_id"])
             rrd = rrdtool.RRD(f_rrd)
             img_path = os.path.join(options['img-path'], info['file'])
             params = {
