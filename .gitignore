@@ -10,3 +10,4 @@ settings.py
 *.lock
 gabrielle-*
 natalie-*
+cache
