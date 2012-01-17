@@ -18,6 +18,7 @@ from time import time
 from optparse import make_option
 
 from django.conf import settings
+from django.core.cache import cache
 from server.models import Server
 from collector.models import Worker
 from django.core.management.base import BaseCommand
@@ -26,6 +27,7 @@ from lockfile import FileLock, LockTimeout
 from jsonrpclib import Server as JSONRPCClient
 
 import collector.rrd as rrdtool
+from collector.cache import CacheWrapper
 
 
 SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_EXCEPTION, RPCSERVER_ERROR = range(4)
@@ -135,6 +137,8 @@ class Command(BaseCommand):
                     settings.COLLECTOR_CONF['query_workers']),
     )
 
+    cache = CacheWrapper(cache)
+
     def __lock_pid(self, path):
         """
         """
@@ -161,11 +165,50 @@ class Command(BaseCommand):
         """
         """
         queue = Queue.Queue()
-        for s in Server.objects.filter(active=True):
-            for r in s.reports.all():
-                for se in r.sections.all():
-                    for v in se.variables.filter(current=False):
-                        queue.put((s, se, v))
+
+        ids = self.cache.do().get('server_active_ids', [])
+        if ids:
+            active = [self.cache.do().get('server_%d' % id) for id in ids]
+        else:
+            active = Server.objects.filter(active=True)
+            [self.cache.do().set('server_%d' % s.id, s) for s in active]
+            self.cache.do().set('server_active_ids', [s.id for s in active])
+
+        for s in active:
+            tasks = self.cache.do().get('server_%d_tasks' % s.id, [])
+            if not tasks:
+                for r in s.reports.all():
+
+                    ids = self.cache.do().get('server_%d_sections' % s.id, [])
+                    if ids:
+                        sections = [self.cache.get('server_%d_sections' % s.id,
+                            None, Section, id=id) for id in ids]
+                    else:
+                        sections = r.sections.all()
+                        [self.cache.do().set('section_%d' % se.id, se) \
+                                for se in sections]
+                        self.cache.do().set('server_%d_variables', [se.id \
+                                for se in sections])
+
+                    for se in sections:
+
+                        ids = self.cache.do().get(
+                                'server_%d_variables' % s.id, [])
+                        if ids:
+                            variables = [self.cache.get('variable_%d' % id,
+                                None, Variable, id=id) for id in ids]
+                        else:
+                            variables = se.variables.filter(current=False)
+                            [self.cache.do().set('variable_%d' % v.id, v) \
+                                    for v in variables]
+                            self.cache.do().set('server_%d_variables', [v.id \
+                                    for v in variables])
+
+                        [tasks.append((s, se, v)) for v in variables]
+                        self.cache.do().set('server_%d_tasks' % s.id, tasks)
+
+            [queue.put(t) for t in tasks]
+
         return queue
 
     def handle(self, *args, **options):
