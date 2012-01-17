@@ -66,3 +66,25 @@ class CacheWrapper(object):
         Returns the wrappered cache object to 'do' its own methods.
         """
         return self.__cache
+
+    def get_list(self, list_ids_key, obj_key, obj_class, method, **query):
+        """
+        """
+        ids = self.__cache.get(list_ids_key, [])
+        logger.debug("[%s] List ids: '%s'=%s" % (self.name, list_ids_key,
+            repr(ids)))
+
+        if ids:
+            objs = [self.get(obj_key % id, None, obj_class, id=id) \
+                    for id in ids]
+        else:
+            logger.debug("[%s] Updating ids list cache: method=%s, query=%s" %
+                    (self.name, method, repr(query)))
+            objs = method(**query)
+            [self.__cache.set(obj_key % o.id, o) \
+                    for o in objs]
+            self.__cache.set(list_ids_key, [o.id for o in objs])
+
+        logger.debug("[%s] Query result: %s=%s" % (self.name, list_ids_key,
+            repr(objs)))
+        return objs
