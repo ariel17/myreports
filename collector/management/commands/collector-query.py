@@ -20,6 +20,7 @@ from optparse import make_option
 from django.conf import settings
 from django.core.cache import cache
 from server.models import Server
+from report.models import Section, Variable
 from collector.models import Worker
 from django.core.management.base import BaseCommand
 
@@ -61,7 +62,8 @@ class QueryWorker(Worker):
         self.rrd_dir = kwargs["rrd_dir"]
 
     def get_value(self, server_id, variable):
-        """TODO: add some docstring for get_value"""
+        """
+        """
 
         if variable.query:
             f = 'doquery'
@@ -166,43 +168,23 @@ class Command(BaseCommand):
         """
         queue = Queue.Queue()
 
-        ids = self.cache.do().get('server_active_ids', [])
-        if ids:
-            active = [self.cache.do().get('server_%d' % id) for id in ids]
-        else:
-            active = Server.objects.filter(active=True)
-            [self.cache.do().set('server_%d' % s.id, s) for s in active]
-            self.cache.do().set('server_active_ids', [s.id for s in active])
+        active_servers = self.cache.get_list('server_active_ids',
+                'server_%d', Server, Server.objects.filter, active=True)
 
-        for s in active:
+        for s in active_servers:
+
             tasks = self.cache.do().get('server_%d_tasks' % s.id, [])
             if not tasks:
                 for r in s.reports.all():
 
-                    ids = self.cache.do().get('server_%d_sections' % s.id, [])
-                    if ids:
-                        sections = [self.cache.get('server_%d_sections' % s.id,
-                            None, Section, id=id) for id in ids]
-                    else:
-                        sections = r.sections.all()
-                        [self.cache.do().set('section_%d' % se.id, se) \
-                                for se in sections]
-                        self.cache.do().set('server_%d_variables', [se.id \
-                                for se in sections])
+                    sections = self.cache.get_list('server_%d_sections' % s.id,
+                            'section_%d', Section, r.sections.all)
 
                     for se in sections:
 
-                        ids = self.cache.do().get(
-                                'server_%d_variables' % s.id, [])
-                        if ids:
-                            variables = [self.cache.get('variable_%d' % id,
-                                None, Variable, id=id) for id in ids]
-                        else:
-                            variables = se.variables.filter(current=False)
-                            [self.cache.do().set('variable_%d' % v.id, v) \
-                                    for v in variables]
-                            self.cache.do().set('server_%d_variables', [v.id \
-                                    for v in variables])
+                        variables = self.cache.get_list('server_%d_variables' %
+                                s.id, 'variable_%d', Variable,
+                                se.variables.filter, current=False)
 
                         [tasks.append((s, se, v)) for v in variables]
                         self.cache.do().set('server_%d_tasks' % s.id, tasks)

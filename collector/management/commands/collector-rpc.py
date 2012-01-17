@@ -79,6 +79,9 @@ from sys import exit
 import signal
 import logging
 
+from django.core.cache import cache
+from collector.cache import CacheWrapper
+
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +151,7 @@ class Command(BaseCommand):
     rpc = None
     servers = []
     context = daemon.DaemonContext()
+    cache = CacheWrapper(cache)
 
     def tear_down(self, signum=None, frame=None):
         """
@@ -179,8 +183,10 @@ class Command(BaseCommand):
         them in a list.
         """
         logger.info("Connecting to servers.")
-        self.servers = [s for s in Server.objects.filter(active=True)
-                if s.connect()]
+
+        active_servers = self.cache.get_list('server_active_ids',
+                'server_%d', Server, Server.objects.filter, active=True)
+        self.servers = [s for s in active_servers if s.connect()]
         logger.debug(repr(self.servers))
         return self.servers
 
