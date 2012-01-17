@@ -228,6 +228,20 @@ LOGGING = {
     },
 }
 
+CACHES = {
+    'default': {
+        # File system cache based
+        # 'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        # 'LOCATION': os.path.join(PROJECT_ROOT, 'cache'),
+        
+        # In Memory based cache
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        # 'LOCATION': 'myreports' # Name this instance it if you like.
+
+        'TIMEOUT': 60 * 60 * 6,  # seconds
+    }
+}
+
 COLLECTOR_CONF = {
     'host': '127.0.0.1',
     'port': 8000,
