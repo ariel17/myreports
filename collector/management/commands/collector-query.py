@@ -19,16 +19,17 @@ from optparse import make_option
 
 from django.conf import settings
 from django.core.cache import cache
+from django.core.management.base import BaseCommand
+
 from server.models import Server
 from report.models import Section, Variable
-from collector.models import Worker
-from django.core.management.base import BaseCommand
+
+from collector.worker import Worker
+import collector.rrd as rrdtool
+from collector.cache import CacheWrapper
 
 from lockfile import FileLock, LockTimeout
 from jsonrpclib import Server as JSONRPCClient
-
-import collector.rrd as rrdtool
-from collector.cache import CacheWrapper
 
 
 SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_EXCEPTION, RPCSERVER_ERROR = range(4)

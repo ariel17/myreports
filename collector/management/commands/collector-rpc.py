@@ -71,7 +71,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
 from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
-from collector.models import SimpleJSONRPCRequestHandler, RPCHandler
+from collector.rpc_server import SimpleJSONRPCRequestHandler, RPCHandler
 from optparse import make_option
 import daemon
 from lockfile import FileLock, LockTimeout
@@ -86,12 +86,6 @@ from collector.cache import CacheWrapper
 logger = logging.getLogger(__name__)
 
 SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_ERROR = range(3)
-
-
-class StoppableSimpleJSONRPCServer(SimpleJSONRPCServer):
-    """
-    """
-    pass
 
 
 class Command(BaseCommand):
@@ -282,9 +276,9 @@ class Command(BaseCommand):
         # Assingning signal handlers.
         self.context.signal_map = {
                 # signal.SIGTERM: self.tear_down,
-                signal.SIGHUP: self.reload_config,   # 'terminate',
-                # signal.SIGUSR1: self.reload_config,
-                # signal.SIGUSR2: self.tear_down,
+                signal.SIGHUP: self.reload_config,
+                signal.SIGUSR1: self.reload_config,
+                signal.SIGUSR2: self.tear_down,
         }
 
         logger.debug("Trying to open daemon context.")
