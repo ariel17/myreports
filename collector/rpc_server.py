@@ -17,16 +17,45 @@ from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 logger = logging.getLogger(__name__)
 
 
+class StoppableSimpleJSONRPCServer(SimpleJSONRPCServer):
+    """
+    A real stoppable JSON RPC Server extending
+    jsonrpclib.SimpleJSONRPCServer.SimpleJSONRPCServer.
+    """
+
+    __running = False
+
+    def serve_forever(self):
+        """
+        Handle requests while the it's running.
+        """
+        self.__running = True
+
+        while self.__running:
+            self.handle_request()
+
+    def shutdown(self):
+        """
+        Sets the stop flag in `True` and closes the server.
+        """
+        
+        self.server_close()
+        self.__running = False
+
+
+
 class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
     """
     JSON implementation for RPC protocol.
     """
+
     MAX_CHUNK_SIZE = 10 * 1024 * 1024
 
     def do_GET(self):
         """
         HTTP GET method processor.
         """
+
         c_ip, c_port = self.client_address
         logger.info("[Request] Client %s:%s method GET: %s" %
                 (c_ip, c_port, data))
@@ -44,6 +73,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
         """
         HTTP POST method processor.
         """
+
         if not self.is_rpc_path_valid():
             logger.warning("[Response] HTTP 404 - The path requested "\
                     "is not a valid address.")
@@ -90,6 +120,7 @@ class RPCHandler:
     This class is the RPC backend that knows what to do with a correct request
     to this service.
     """
+
     servers = {}
 
     def __init__(self, servers):
@@ -100,6 +131,7 @@ class RPCHandler:
         Receives a list of Server objects and returns a dict with the same
         objects indexed by id.
         """
+
         for s in server_list:
             self.servers[s.id] = s
 
@@ -108,11 +140,6 @@ class RPCHandler:
         Performs a call to the indicated method with kwargs given to a Server
         object with the same `id` value as the idoneous parameter.
         """
+
         s = self.servers.get(id, None)
         return getattr(s, method)(**kwargs) if s else None
-
-
-class StoppableSimpleJSONRPCServer(SimpleJSONRPCServer):
-    """
-    """
-    pass
