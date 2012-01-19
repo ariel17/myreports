@@ -35,7 +35,7 @@ def clean_startup():
     log files, unremoved pid files.
     """
     for pattern in ('*.pyc', '*pyo', '*.pid*', '*.log', 'gabrielle-*',
-            'natalie-*', '*.rrd*', '*update*'):
+            'natalie-*', '*.rrd*', '*update*', '*.lock*'):
         local("/usr/bin/find -name '%s' -delete" % pattern.strip())
     print green("Project cleaned.")            
 
