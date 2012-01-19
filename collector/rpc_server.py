@@ -32,7 +32,12 @@ class StoppableSimpleJSONRPCServer(SimpleJSONRPCServer):
         self.__running = True
 
         while self.__running:
-            self.handle_request()
+            try:
+                self.handle_request()
+            except Exception, (e):
+                errno, msg = e.args
+                if errno != 4:  # 4 = Interrupted system call
+                    raise e
 
     def shutdown(self):
         """
