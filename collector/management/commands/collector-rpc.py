@@ -70,8 +70,8 @@ call::
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from server.models import Server
-from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
-from collector.rpc_server import SimpleJSONRPCRequestHandler, RPCHandler
+from collector.rpc_server import StoppableSimpleJSONRPCServer, \
+        SimpleJSONRPCRequestHandler, RPCHandler
 from optparse import make_option
 import daemon
 from lockfile import FileLock, LockTimeout
@@ -198,7 +198,7 @@ class Command(BaseCommand):
         parameter.
         """
         logger.info("Starting JSON RPC server: %s %d" % (self.host, self.port))
-        self.rpc = SimpleJSONRPCServer((self.host, self.port),
+        self.rpc = StoppableSimpleJSONRPCServer((self.host, self.port),
                 requestHandler=SimpleJSONRPCRequestHandler)
         self.rpc.register_instance(RPCHandler(self.__connect_servers()))
         self.rpc.serve_forever()
