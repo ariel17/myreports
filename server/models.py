@@ -1,26 +1,22 @@
-from django.db import models
-from report.models import Report
-from django.utils.translation import ugettext as _
-import settings
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Description: TODO
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
+
+
 import logging
 import MySQLdb
 
+from django.db import models
+from django.utils.translation import ugettext as _
+from report.models import Report
+from utils.utils import to_list_dict
+
 
 logger = logging.getLogger(__name__)
-
-
-def to_list_dict(rs, headers):
-    """
-    Converts a resultset, given by 'rs' to a list of dictionaries, using
-    'headers' as ordered column names.
-    """
-    result = []
-    for row in rs:
-        d = {}
-        for (pos, col_name) in enumerate(headers):
-            d[col_name] = row[pos]
-        result.append(d)
-    return result
 
 
 class MySQLHandler(models.Model):
@@ -67,7 +63,7 @@ class MySQLHandler(models.Model):
                         repr(params))
                 self.__conn = MySQLdb.connect(**params)
                 return True
-            except Exception, (e):
+            except Exception:
                 logger.exception("Can not connect to MySQL Server:")
             return False
         return True

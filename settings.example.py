@@ -1,7 +1,15 @@
-# Django settings for myreports project.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Description: Django settings for myreports project.
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 
 import os
+
 from logging.handlers import SysLogHandler
+
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 

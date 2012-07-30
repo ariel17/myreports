@@ -6,9 +6,9 @@ Description:
 """
 __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 
-from tastypie.resources import ModelResource
-from tastypie import fields
 from server.models import Server, Database
+from tastypie import fields
+from tastypie.resources import ModelResource
 
 
 class ServerResource(ModelResource):

@@ -17,9 +17,10 @@ Downloaded from http://www.goldb.org/rrdpython.html
 """
 
 
-import os
-from time import time
 import logging
+import os
+
+from time import time
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +77,6 @@ class RRD:
             unlimited values.
         """
         interval = str(interval)
-        interval_mins = float(interval) / 60
         # heartbeat defines the maximum number of seconds that may pass
         # between two updates of this data source before the value of the data
         # source is assumed to be *UNKNOWN*.

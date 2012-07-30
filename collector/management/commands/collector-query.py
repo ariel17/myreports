@@ -9,27 +9,22 @@ server configured previously.
 __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 
 
+import collector.rrd as rrdtool
+import logging
 import os
 import Queue
-import logging
-from sys import exit
-from math import floor
-from time import time
-from optparse import make_option
 
+from collector.cache import CacheWrapper
+from collector.worker import Worker
 from django.conf import settings
 from django.core.cache import cache
 from django.core.management.base import BaseCommand
-
-from server.models import Server
-from report.models import Section, Variable
-
-from collector.worker import Worker
-import collector.rrd as rrdtool
-from collector.cache import CacheWrapper
-
-from lockfile import FileLock, LockTimeout
 from jsonrpclib import Server as JSONRPCClient
+from lockfile import FileLock, LockTimeout
+from optparse import make_option
+from report.models import Section, Variable
+from server.models import Server
+from sys import exit
 
 
 SUCCESS, ALREADY_RUNNING_ERROR, CONTEXT_EXCEPTION, RPCSERVER_ERROR = range(4)

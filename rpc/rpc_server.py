@@ -7,11 +7,12 @@ Description: JSON RPC Server implementation.
 __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 
 
-import os
 import logging
-from django.conf import settings
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+import traceback
+
+from jsonrpclib import Fault
 from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 
 
 logger = logging.getLogger(__name__)
@@ -43,10 +44,8 @@ class StoppableSimpleJSONRPCServer(SimpleJSONRPCServer):
         """
         Sets the stop flag in `True` and closes the server.
         """
-        
         self.server_close()
         self.__running = False
-
 
 
 class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
@@ -62,8 +61,8 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
         """
 
         c_ip, c_port = self.client_address
-        logger.info("[Request] Client %s:%s method GET: %s" %
-                (c_ip, c_port, data))
+        logger.info("[Request] Client %s:%s method GET: %s" % (c_ip, c_port,
+            data))
         logger.warning("[Response] HTTP 400 - Method not allowed.")
         self.send_response(400)
         response = ''
@@ -80,8 +79,8 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
         """
 
         if not self.is_rpc_path_valid():
-            logger.warning("[Response] HTTP 404 - The path requested "\
-                    "is not a valid address.")
+            logger.warning("[Response] HTTP 404 - The path requested is not " \
+                    "a  valid address.")
             self.report_404()
             return
 
@@ -105,7 +104,7 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCRequestHandler):
             message = "Internal Server Error."
             err_lines = traceback.format_exc().splitlines()
             trace_string = '%s | %s' % (err_lines[-3], err_lines[-1])
-            fault = jsonrpclib.Fault(-32603, 'Server error: %s' % trace_string)
+            fault = Fault(-32603, 'Server error: %s' % trace_string)
             response = fault.response()
         finally:
             logger.info("[Response] HTTP %d - %s" % (status, message))

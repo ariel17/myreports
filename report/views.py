@@ -1,6 +1,12 @@
-from django.shortcuts import render_to_response, get_object_or_404
-from server.models import ReportByServer
-from report.models import Section
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Description: TODO
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
+
+
 import logging
 
 

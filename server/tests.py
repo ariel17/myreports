@@ -1,26 +1,21 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-Replace this with more appropriate tests for your application.
 """
+Description: TODO
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
+
 
 from django.test import TestCase
 from server.models import Server
-
-
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
 
 
 class ServerTest(TestCase):
     """
     Testing for Server model.
     """
+
     def setUp(self):
         self.s = Server(ip="127.0.0.1", username="root", name="localhost_test")
         self.s.save()

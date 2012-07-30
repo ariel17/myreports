@@ -6,21 +6,18 @@ Description: Dumps graphics from RRDTool for all sections into image files.
 """
 __author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
 
-import os
-import datetime
-import time
-import logging
-from sys import exit
-from optparse import make_option
-
-from django.core.management.base import BaseCommand
-from django.core.cache import cache
-from django.conf import settings
-from server.models import Server
-from report.models import Section, Variable, THRESHOLD_SEPARATOR
-
 import collector.rrd as rrdtool
+import logging
+import os
+import time
+
 from collector.cache import CacheWrapper
+from django.conf import settings
+from django.core.cache import cache
+from django.core.management.base import BaseCommand
+from optparse import make_option
+from report.models import Section, Variable
+from sys import exit
 
 
 logger = logging.getLogger(__name__)

@@ -1,4 +1,12 @@
-# Django settings for myreports project on devel stage.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Description: Django settings for myreports project on devel stage.
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
+
+
 import os
 
 

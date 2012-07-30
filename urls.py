@@ -1,10 +1,20 @@
-from django.conf.urls.defaults import patterns, include, url
-from report.views import show_report
-from report.views import show_section
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-from tastypie.api import Api
+"""
+Description: TODO
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
+
+
+from django.conf.urls.defaults import patterns, include, url
+from django.contrib import admin
 from server.api import ServerResource, DatabaseResource
 from server.views import test_connection
+from tastypie.api import Api
+
+
+admin.autodiscover()
 
 api = Api(api_name='v1')
 api.register(ServerResource())
@@ -25,9 +35,6 @@ TODO:
    /direct/section/0123-4567-89AB/
 """
 
-# Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-admin.autodiscover()
 
 urlpatterns = patterns('',
     # Uncomment the admin/doc line below to enable admin documentation:

@@ -67,20 +67,20 @@ call::
 
 """
 
-from django.core.management.base import BaseCommand
-from django.conf import settings
-from server.models import Server
+import daemon
+import logging
+import signal
+
+from collector.cache import CacheWrapper
 from collector.rpc_server import StoppableSimpleJSONRPCServer, \
         SimpleJSONRPCRequestHandler, RPCHandler
-from optparse import make_option
-import daemon
-from lockfile import FileLock, LockTimeout
-from sys import exit
-import signal
-import logging
-
+from django.conf import settings
 from django.core.cache import cache
-from collector.cache import CacheWrapper
+from django.core.management.base import BaseCommand
+from lockfile import FileLock, LockTimeout
+from optparse import make_option
+from server.models import Server
+from sys import exit
 
 
 logger = logging.getLogger(__name__)
@@ -293,7 +293,7 @@ class Command(BaseCommand):
         self.context.prevent_core = options['prevent_core']
         try:
             self.context.open()
-        except daemon.daemon.DaemonOSEnvironmentError, e:
+        except daemon.daemon.DaemonOSEnvironmentError:
             logger.exception("Error ocurred trying to open daemon context:")
             exit(CONTEXT_ERROR)
 

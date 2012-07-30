@@ -1,5 +1,14 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Description: TODO
+"""
+__author__ = "Ariel Gerardo Ríos (ariel.gerardo.rios@gmail.com)"
+
+
 from django.contrib import admin
-from models import Server, ReportByServer, Database
+from models import Server, ReportByServer
 
 
 class ReportByServerInline(admin.TabularInline):
